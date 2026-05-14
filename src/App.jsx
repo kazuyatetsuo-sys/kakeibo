@@ -38,13 +38,21 @@ const pad      = n => String(n).padStart(2,"0");
 const fmtDate  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fmtYen   = n => `¥${Number(n).toLocaleString()}`;
 const fmtDateStr = (d) => {
-  // "2026-05-14" または "2026-05-13T15:00:00.000Z" どちらも対応
-  const s = String(d).slice(0,10); // 最初の10文字 = YYYY-MM-DD
-  return s;
+  if(!d) return "";
+  const s = String(d);
+  // ISO形式（2026-05-13T15:00:00.000Z）の場合はローカル時間に変換
+  if(s.includes("T") || s.includes("Z")){
+    const date = new Date(s);
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const day = String(date.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  return s.slice(0,10);
 };
 const todayStr = () => fmtDate(new Date());
 const MONTHS   = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
-const DAYS     = ["日","月","火","水","木","金","土"];
+const DAYS     = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const PALETTE  = ["#4f7cac","#6dbf9e","#f0a500","#e07a5f","#9c89b8","#f18f01","#44bba4","#e94f37","#adb5bd","#5c677d","#b5838d","#6d6875"];
 
 const gasPost = async (body) => {
@@ -131,11 +139,11 @@ function EditRecordModal({ record, categories, catColors, bizCategories, bizCatC
   const payeesToShow = r.category ? (catPayees[r.category]||[]) : [];
   return (
     <div style={S.overlay}>
-      <div style={S.modal}>
+      <div style={{...S.modal,maxHeight:"90vh",overflowY:"auto"}}>
         <h3 style={S.modalTitle}>記録を編集</h3>
 
         {/* 日付・金額 */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:4}}>
           <div>
             <label style={{...S.label,marginTop:0}}>日付</label>
             <input style={{...S.input,width:"100%",boxSizing:"border-box"}} type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} />
@@ -143,9 +151,9 @@ function EditRecordModal({ record, categories, catColors, bizCategories, bizCatC
           <div>
             <label style={{...S.label,marginTop:0}}>金額（円）</label>
             <input style={{...S.input,textAlign:"right",fontWeight:700}}
-              type="text" inputMode="numeric"
-              value={r.amount ? Number(String(r.amount).replace(/,/g,"")).toLocaleString() : ""}
-              onChange={e=>{const raw=e.target.value.replace(/,/g,"").replace(/[^0-9]/g,""); setR(v=>({...v,amount:raw?Number(raw):0}));}} />
+              type="number" inputMode="numeric"
+              value={r.amount}
+              onChange={e=>setR(v=>({...v,amount:e.target.value}))} />
           </div>
         </div>
 
@@ -158,9 +166,9 @@ function EditRecordModal({ record, categories, catColors, bizCategories, bizCatC
           ))}
         </div>
 
-        {/* 支払い先（チップ選択） */}
+        {/* 支払い先 */}
         {payeesToShow.length>0 && (
-          <>
+          <div>
             <label style={S.label}>支払い先</label>
             <div style={S.chips}>
               {payeesToShow.map(p=>(
@@ -168,11 +176,27 @@ function EditRecordModal({ record, categories, catColors, bizCategories, bizCatC
                   onClick={()=>setR(v=>({...v,payee:p}))}>{p}</button>
               ))}
             </div>
-          </>
+          </div>
         )}
         <input style={{...S.input,marginTop:6}} placeholder="支払い先を直接入力" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
 
-        {/* 事業経費カテゴリー（isBizのとき） */}
+        {/* 固定費・事業経費トグル */}
+        <div style={{...S.toggleRow,marginTop:14}}>
+          <div style={S.toggleItem} onClick={()=>setR(v=>({...v,isFixed:!v.isFixed}))}>
+            <span style={S.toggleLabel}>固定費</span>
+            <div style={{...S.toggleSwitch,...(r.isFixed?S.toggleSwitchOn:{})}}>
+              <div style={{...S.toggleThumb,...(r.isFixed?S.toggleThumbOn:{})}} />
+            </div>
+          </div>
+          <div style={{...S.toggleItem,borderBottom:"none"}} onClick={()=>setR(v=>({...v,isBiz:!v.isBiz,bizCategory:v.isBiz?"":v.bizCategory}))}>
+            <span style={S.toggleLabel}>事業経費</span>
+            <div style={{...S.toggleSwitch,...(r.isBiz?S.toggleSwitchBiz:{})}}>
+              <div style={{...S.toggleThumb,...(r.isBiz?S.toggleThumbOn:{})}} />
+            </div>
+          </div>
+        </div>
+
+        {/* 事業カテゴリー */}
         {r.isBiz && (
           <div style={{...S.bizCatSection,marginTop:10}}>
             <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
@@ -339,7 +363,7 @@ export default function App() {
     try {
       const res = await (await fetch(`${GAS_URL}?action=getAll`)).json();
       if(res.ok && !isWriting.v){
-        setRecords(res.records.map(r=>({...r,date:fmtDateStr(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
+        setRecords(res.records.map(r=>({...r,date:fmtDateStr(String(r.date)),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE",bizCategory:r.bizCategory||""})));
         const s=res.settings||{};
         if(s.categories)    setCategories(s.categories);
         if(s.catPayees)     setCatPayees(s.catPayees);
@@ -439,8 +463,18 @@ export default function App() {
   const saveSettings = (patch) => { if(GAS_URL) syncPost({action:"saveAllSettings",settings:patch}); };
 
   // ── 月間データ ──
+  // 締め日サイクル：前月19日〜当月18日
+  const cycleStart = (y, m) => {
+    // 前月19日
+    const pm = m===1 ? 12 : m-1;
+    const py = m===1 ? y-1 : y;
+    return `${py}-${pad(pm)}-19`;
+  };
+  const cycleEnd = (y, m) => `${y}-${pad(m)}-18`; // 当月18日
+
   const monthRecords = records.filter(r=>{
-    const d=fmtDateStr(r.date); const [y,m]=d.split("-").map(Number); return y===viewYear&&m===viewMonth;
+    const d = fmtDateStr(r.date);
+    return d >= cycleStart(viewYear, viewMonth) && d <= cycleEnd(viewYear, viewMonth);
   });
   const byDate={};
   monthRecords.forEach(r=>{ const d=fmtDateStr(r.date); if(!byDate[d])byDate[d]={}; byDate[d][r.category]=(byDate[d][r.category]||0)+r.amount; });
@@ -504,14 +538,11 @@ export default function App() {
                 <label style={{...S.label,marginTop:0}}>金額（円）</label>
                 <input
                   style={{...S.input,fontSize:18,fontWeight:700,textAlign:"right"}}
-                  type="text"
+                  type="number"
                   inputMode="numeric"
                   placeholder="0"
-                  value={form.amount ? Number(form.amount.toString().replace(/,/g,"")).toLocaleString() : ""}
-                  onChange={e=>{
-                    const raw = e.target.value.replace(/,/g,"").replace(/[^0-9]/g,"");
-                    setForm(f=>({...f,amount:raw}));
-                  }}
+                  value={form.amount}
+                  onChange={e=>setForm(f=>({...f,amount:e.target.value}))}
                 />
               </div>
             </div>
@@ -626,7 +657,14 @@ export default function App() {
           <div style={S.card}>
             <div style={S.navRow}>
               <button style={S.arrowBtn} onClick={()=>{ setExpandedDate(null); setExpandedCat(null); if(viewMonth===1){setViewMonth(12);setViewYear(y=>y-1);}else setViewMonth(m=>m-1); }}>◀</button>
-              <h2 style={S.cardTitle}>{viewYear}年 {viewMonth}月</h2>
+              <div style={{textAlign:"center"}}>
+                <h2 style={{...S.cardTitle,marginBottom:2}}>{viewYear}年 {viewMonth}月</h2>
+                <div style={{fontSize:11,color:"#aaa",marginBottom:0}}>
+                  {viewMonth===1?viewYear-1:viewYear}/{pad(viewMonth===1?12:viewMonth-1)}/19
+                  {" 〜 "}
+                  {viewYear}/{pad(viewMonth)}/18
+                </div>
+              </div>
               <button style={S.arrowBtn} onClick={()=>{ setExpandedDate(null); setExpandedCat(null); if(viewMonth===12){setViewMonth(1);setViewYear(y=>y+1);}else setViewMonth(m=>m+1); }}>▶</button>
             </div>
 
@@ -658,36 +696,7 @@ export default function App() {
                       );
                     })}
                   </div>
-                  <div style={S.catSummaryList}>
-                    {usedCats.map(c=>{
-                      const isOpen=expandedCat===c;
-                      const recs=monthRecords.filter(r=>r.category===c);
-                      return (
-                        <div key={c}>
-                          <div style={{...S.catSummaryRow,...(isOpen?S.catSummaryRowOpen:{})}} onClick={()=>setExpandedCat(isOpen?null:c)}>
-                            <span style={{...S.dot,background:catColors[c],width:10,height:10}} />
-                            <span style={S.catSummaryName}>{c}</span>
-                            <span style={S.catSummaryPct}>{Math.round(catTotals[c]/monthTotal*100)}%</span>
-                            <span style={S.catSummaryAmt}>{fmtYen(catTotals[c])}</span>
-                            <span style={S.chevron}>{isOpen?"▲":"▼"}</span>
-                          </div>
-                          {isOpen && (
-                            <div style={S.catBreakdown}>
-                              {recs.map(r=>(
-                                <div key={r.id} style={S.catBreakdownRow}>
-                                  <span style={S.catBreakdownDate}>{fmtDateStr(r.date).slice(5).replace("-","/")} {DAYS[new Date(fmtDateStr(r.date)).getDay()]}</span>
-                                  <span style={S.catBreakdownPayee}>{r.payee||""}</span>
-                                  {r.memo&&<span style={S.catBreakdownMemo}>「{r.memo}」</span>}
-                                  <span style={S.catBreakdownAmt}>{fmtYen(r.amount)}</span>
-                                  <button style={S.delBtn} onClick={()=>deleteRecord(r.id)}>×</button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+
                 </div>
               )}
               {monthTotal===0 && <p style={S.empty}>この月の記録はありません</p>}
@@ -700,20 +709,20 @@ export default function App() {
                   <thead>
                     <tr>
                       <th style={{...S.th,...S.thSticky}}>日付</th>
+                      <th style={{...S.th,...S.thTotal}}>合計</th>
                       {usedCats.map(c=>(
                         <th key={c} style={S.th}>
                           <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:catColors[c],marginRight:4,verticalAlign:"middle"}} />
                           {c}
                         </th>
                       ))}
-                      <th style={{...S.th,...S.thTotal}}>合計</th>
                     </tr>
                     <tr style={S.trSum}>
                       <td style={{...S.td,...S.thSticky,fontWeight:700,background:"#f5f5f0"}}>月計</td>
+                      <td style={{...S.td,...S.tdTotal,fontWeight:700}}>{fmtYen(monthTotal)}</td>
                       {usedCats.map(c=>(
                         <td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(catTotals[c])}</td>
                       ))}
-                      <td style={{...S.td,...S.tdTotal,fontWeight:700}}>{fmtYen(monthTotal)}</td>
                     </tr>
                   </thead>
                   <tbody>
@@ -731,8 +740,9 @@ export default function App() {
                             <td style={{...S.td,...S.thSticky,color:dateColor,background:isToday?"#eef4fb":"#fff"}}>
                               {fmtDateStr(date).slice(5).replace("-","/")}
                               <span style={{fontSize:11,color:dateColor,opacity:.7,marginLeft:3}}>{dow}</span>
-                              {isToday&&<span style={S.todayBadge}>今日</span>}
+                              {isToday&&<span style={S.todayBadge}>today</span>}
                             </td>
+                            <td style={{...S.td,...S.tdTotal,fontWeight:600}}>{fmtYen(dayTotal)}</td>
                             {usedCats.map(c=>{
                               const amt=byDate[date][c];
                               const cellKey=`${date}:${c}`;
@@ -747,7 +757,6 @@ export default function App() {
                                 </td>
                               );
                             })}
-                            <td style={{...S.td,...S.tdTotal}}>{fmtYen(dayTotal)}</td>
                           </tr>
                           {usedCats.map(c=>{
                             const cellKey=`${date}:${c}`;
@@ -821,7 +830,7 @@ export default function App() {
                         return (
                           <tr key={m} style={{...(mi%2===0?S.trEven:S.trOdd),...(isCur?S.trToday:{})}}>
                             <td style={{...S.td,...S.thSticky,fontWeight:600,background:isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb"}}>
-                              {mLabel}{isCur&&<span style={S.todayBadge}>今月</span>}
+                              {mLabel}{isCur&&<span style={S.todayBadge}>this month</span>}
                             </td>
                             {yearUsedCats.map(c=>(
                               <td key={c} style={S.td}>{byMonth[m][c]?fmtYen(byMonth[m][c]):<span style={S.dash}>—</span>}</td>
@@ -925,7 +934,7 @@ export default function App() {
                         return (
                           <tr key={m} style={{...(mi%2===0?S.trEven:S.trOdd),...(isCur?S.trToday:{})}}>
                             <td style={{...S.td,...S.thSticky,fontWeight:600,background:isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb"}}>
-                              {mLabel}{isCur&&<span style={S.todayBadge}>今月</span>}
+                              {mLabel}{isCur&&<span style={S.todayBadge}>this month</span>}
                             </td>
                             {bizYearUsedCats.map(c=>(
                               <td key={c} style={S.td}>{bizByMonth[m][c]?fmtYen(bizByMonth[m][c]):<span style={S.dash}>—</span>}</td>
