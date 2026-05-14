@@ -126,12 +126,15 @@ function CatPayeeEditor({ categories, catPayees, onSave, onClose }) {
 
 
 // ── EditRecordModal: レコード編集モーダル ─────────────────────────────────────
-function EditRecordModal({ record, categories, catColors, bizCategories, bizCatColors, onSave, onClose }) {
+function EditRecordModal({ record, categories, catColors, bizCategories, bizCatColors, catPayees, onSave, onClose }) {
   const [r, setR] = useState({...record});
+  const payeesToShow = r.category ? (catPayees[r.category]||[]) : [];
   return (
     <div style={S.overlay}>
       <div style={S.modal}>
         <h3 style={S.modalTitle}>記録を編集</h3>
+
+        {/* 日付・金額 */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           <div>
             <label style={{...S.label,marginTop:0}}>日付</label>
@@ -139,23 +142,56 @@ function EditRecordModal({ record, categories, catColors, bizCategories, bizCatC
           </div>
           <div>
             <label style={{...S.label,marginTop:0}}>金額（円）</label>
-            <input style={{...S.input,textAlign:"right",fontWeight:700}} type="number" value={r.amount} onChange={e=>setR(v=>({...v,amount:Number(e.target.value)}))} />
+            <input style={{...S.input,textAlign:"right",fontWeight:700}}
+              type="text" inputMode="numeric"
+              value={r.amount ? Number(String(r.amount).replace(/,/g,"")).toLocaleString() : ""}
+              onChange={e=>{const raw=e.target.value.replace(/,/g,"").replace(/[^0-9]/g,""); setR(v=>({...v,amount:raw?Number(raw):0}));}} />
           </div>
         </div>
+
+        {/* 通常カテゴリー */}
         <label style={S.label}>カテゴリー</label>
         <div style={S.chips}>
-          {(r.isBiz?bizCategories:categories).map(c=>(
-            <button key={c} style={{...S.chip,...(r.category===c?{background:(r.isBiz?bizCatColors:catColors)[c],color:"#fff",borderColor:(r.isBiz?bizCatColors:catColors)[c]}:{})}}
-              onClick={()=>setR(v=>({...v,category:c}))}>{c}</button>
+          {categories.map(c=>(
+            <button key={c} style={{...S.chip,...(r.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}}
+              onClick={()=>setR(v=>({...v,category:c,payee:""}))}>{c}</button>
           ))}
         </div>
-        <label style={S.label}>支払い先</label>
-        <input style={S.input} placeholder="支払い先" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
+
+        {/* 支払い先（チップ選択） */}
+        {payeesToShow.length>0 && (
+          <>
+            <label style={S.label}>支払い先</label>
+            <div style={S.chips}>
+              {payeesToShow.map(p=>(
+                <button key={p} style={{...S.chip,...(r.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}}
+                  onClick={()=>setR(v=>({...v,payee:p}))}>{p}</button>
+              ))}
+            </div>
+          </>
+        )}
+        <input style={{...S.input,marginTop:6}} placeholder="支払い先を直接入力" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
+
+        {/* 事業経費カテゴリー（isBizのとき） */}
+        {r.isBiz && (
+          <div style={{...S.bizCatSection,marginTop:10}}>
+            <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
+            <div style={S.chips}>
+              {bizCategories.map(c=>(
+                <button key={c} style={{...S.chip,...(r.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}}
+                  onClick={()=>setR(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>{c}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* メモ */}
         <label style={S.label}>メモ</label>
         <input style={S.input} placeholder="メモ" value={r.memo||""} onChange={e=>setR(v=>({...v,memo:e.target.value}))} />
+
         <div style={{...S.modalBtns,marginTop:20}}>
           <button style={S.cancelBtn} onClick={onClose}>キャンセル</button>
-          <button style={S.saveBtn} onClick={()=>onSave(r)}>保存</button>
+          <button style={S.saveBtn} onClick={()=>onSave({...r,amount:Number(String(r.amount).replace(/,/g,""))})}>保存</button>
         </div>
       </div>
     </div>
@@ -466,7 +502,17 @@ export default function App() {
               </div>
               <div>
                 <label style={{...S.label,marginTop:0}}>金額（円）</label>
-                <input style={{...S.input,fontSize:18,fontWeight:700,textAlign:"right"}} type="number" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+                <input
+                  style={{...S.input,fontSize:18,fontWeight:700,textAlign:"right"}}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={form.amount ? Number(form.amount.toString().replace(/,/g,"")).toLocaleString() : ""}
+                  onChange={e=>{
+                    const raw = e.target.value.replace(/,/g,"").replace(/[^0-9]/g,"");
+                    setForm(f=>({...f,amount:raw}));
+                  }}
+                />
               </div>
             </div>
 
@@ -967,6 +1013,7 @@ export default function App() {
           record={editingRecord}
           categories={categories} catColors={catColors}
           bizCategories={bizCategories} bizCatColors={bizCatColors}
+          catPayees={catPayees}
           onSave={updateRecord}
           onClose={()=>setEditingRecord(null)}
         />
