@@ -63,7 +63,7 @@ const DEFAULT_BIZ_CAT_PAYEES = {
   "その他経費":["その他"],
 };
 
-const GAS_URL = (typeof localStorage !== "undefined" && localStorage.getItem("kakeibo_gas_url")) || "";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxzhntAQ9r4TZxQb57nOKkXWSetKoAMivuyGWHe-qBhuyc9asHDhO_9RjtBBX8V0Sry/exec";
 
 const pad      = n => String(n).padStart(2,"0");
 const fmtDate  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
