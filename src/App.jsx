@@ -37,6 +37,11 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxzhntAQ9r4TZxQb57nOKkX
 const pad      = n => String(n).padStart(2,"0");
 const fmtDate  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fmtYen   = n => `¥${Number(n).toLocaleString()}`;
+const fmtDateStr = (d) => {
+  // "2026-05-14" または "2026-05-13T15:00:00.000Z" どちらも対応
+  const s = String(d).slice(0,10); // 最初の10文字 = YYYY-MM-DD
+  return s;
+};
 const todayStr = () => fmtDate(new Date());
 const MONTHS   = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
 const DAYS     = ["日","月","火","水","木","金","土"];
@@ -330,31 +335,23 @@ export default function App() {
   };
 
   const addRecord = () => {
-    const bizCat    = form.isBiz ? form.bizCategory : null;
-    const normalCat = form.category;
-    const primaryCat = bizCat || normalCat;
-    if(!form.amount||!primaryCat||!form.date){ showToast("日付・金額・カテゴリーは必須です","error"); return; }
+    const cat = form.isBiz ? form.bizCategory : form.category;
+    if(!form.amount||!cat||!form.date){ showToast("日付・金額・カテゴリーは必須です","error"); return; }
 
-    const baseRec = {date:form.date, amount:Number(form.amount),
-      payee:form.payee||"", memo:form.memo||"", isFixed:form.isFixed};
+    const rec = {
+      id: Date.now(),
+      date: form.date,
+      amount: Number(form.amount),
+      category: cat,
+      payee: form.payee||"",
+      memo: form.memo||"",
+      isFixed: form.isFixed,
+      isBiz: form.isBiz,
+    };
 
-    const newRecs = [];
+    setRecords(prev=>[...prev, rec]);
 
-    // 事業経費レコード（bizCatが選ばれている場合）
-    if(bizCat){
-      newRecs.push({...baseRec, id:Date.now(), category:bizCat, isBiz:true});
-    }
-
-    // 通常カテゴリーレコード（normalCatが選ばれている場合）
-    // 事業経費ONでも通常カテゴリーが選択されていれば家計側にも記録
-    if(normalCat){
-      newRecs.push({...baseRec, id:Date.now()+1, category:normalCat, isBiz:false});
-    }
-
-    // bizCatもnormalCatもない場合は弾く（上でチェック済み）
-    const rec = newRecs[0]; // 固定費判定用に先頭を使う
-    setRecords(prev=>[...prev,...newRecs]);
-    // 固定費ONで記録したら、同名候補がなければ固定費候補に自動追加
+    // 固定費ONで記録したら固定費候補に自動追加
     if(form.isFixed){
       const name = form.memo||cat;
       const day  = Number(form.date.split("-")[2]);
@@ -371,12 +368,9 @@ export default function App() {
     } else {
       showToast("記録しました ✓");
     }
+
     setForm(f=>({...f,amount:"",memo:"",payee:"",isFixed:false,isBiz:false,bizCategory:""}));
-    if(newRecs.length>1){
-      syncPost({action:"addRecords",records:newRecs});
-    } else {
-      syncPost({action:"addRecord",record:newRecs[0]});
-    }
+    syncPost({action:"addRecord", record:rec});
   };
 
   const updateRecord = (updated) => {
@@ -409,13 +403,13 @@ export default function App() {
     const [y,m]=r.date.split("-").map(Number); return y===viewYear&&m===viewMonth&&!r.isBiz;
   });
   const byDate={};
-  monthRecords.forEach(r=>{ if(!byDate[r.date])byDate[r.date]={}; byDate[r.date][r.category]=(byDate[r.date][r.category]||0)+r.amount; });
+  monthRecords.forEach(r=>{ const d=fmtDateStr(r.date); if(!byDate[d])byDate[d]={}; byDate[d][r.category]=(byDate[d][r.category]||0)+r.amount; });
   const monthTotal = monthRecords.reduce((s,r)=>s+r.amount,0);
   const usedCats   = categories.filter(c=>monthRecords.some(r=>r.category===c));
   const catTotals  = {}; usedCats.forEach(c=>{catTotals[c]=monthRecords.filter(r=>r.category===c).reduce((s,r)=>s+r.amount,0);});
 
   // ── 年間データ ──
-  const yearRecords  = records.filter(r=>r.date.startsWith(String(viewYear))&&!r.isBiz);
+  const yearRecords  = records.filter(r=>fmtDateStr(r.date).startsWith(String(viewYear))&&!r.isBiz);
   const byMonth={}; for(let m=1;m<=12;m++) byMonth[m]={};
   yearRecords.forEach(r=>{ const m=Number(r.date.split("-")[1]); byMonth[m][r.category]=(byMonth[m][r.category]||0)+r.amount; });
   const yearUsedCats = categories.filter(c=>yearRecords.some(r=>r.category===c));
@@ -522,30 +516,7 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* 家計カテゴリーも同時記録 */}
-                <div style={{marginTop:10,paddingTop:10,borderTop:"1px dashed #b2e0d0"}}>
-                  <div style={S.rowLabel}>
-                    <label style={{...S.label,marginTop:0,color:"#888"}}>
-                      家計カテゴリーにも記録
-                      {form.category&&<span style={{marginLeft:6,color:"#4f7cac",fontWeight:700}}>ON</span>}
-                    </label>
-                    <button style={S.editLink} onClick={()=>setEditingCat(true)}>編集</button>
-                  </div>
-                  <p style={{fontSize:11,color:"#aaa",marginBottom:8}}>
-                    例）事業では「消耗品」、家計では「日用品」として両方に記録されます
-                  </p>
-                  <div style={S.chips}>
-                    {categories.map(c=>(
-                      <button key={c}
-                        style={{...S.chip,...(form.category===c
-                          ?{background:catColors[c],color:"#fff",borderColor:catColors[c]}
-                          :{})}}
-                        onClick={()=>setForm(f=>({...f,category:f.category===c?"":c,payee:""}))}>
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
             )}
 
@@ -619,8 +590,25 @@ export default function App() {
               </div>
               {monthTotal>0 && (
                 <div>
+                  {/* 太いバー：カテゴリーラベルを内側に */}
                   <div style={S.barTrack}>
-                    {usedCats.map(c=><div key={c} style={{width:`${catTotals[c]/monthTotal*100}%`,background:catColors[c],height:"100%"}} />)}
+                    {usedCats.map(c=>{
+                      const pct = catTotals[c]/monthTotal*100;
+                      return (
+                        <div key={c} style={{width:`${pct}%`,background:catColors[c],height:"100%",
+                          position:"relative",overflow:"hidden",cursor:"pointer",transition:"opacity .15s"}}
+                          onClick={()=>setExpandedCat(expandedCat===c?null:c)}
+                          title={`${c}: ${fmtYen(catTotals[c])}`}>
+                          {pct>8&&(
+                            <span style={{position:"absolute",left:6,top:"50%",transform:"translateY(-50%)",
+                              fontSize:11,fontWeight:600,color:"rgba(255,255,255,.9)",whiteSpace:"nowrap",
+                              overflow:"hidden",maxWidth:"calc(100% - 8px)"}}>
+                              {pct>15?c:""}{pct>20?` ${fmtYen(catTotals[c])}`:""}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   <div style={S.catSummaryList}>
                     {usedCats.map(c=>{
@@ -639,7 +627,7 @@ export default function App() {
                             <div style={S.catBreakdown}>
                               {recs.map(r=>(
                                 <div key={r.id} style={S.catBreakdownRow}>
-                                  <span style={S.catBreakdownDate}>{r.date.slice(5).replace("-","/")} {DAYS[new Date(r.date).getDay()]}</span>
+                                  <span style={S.catBreakdownDate}>{fmtDateStr(r.date).slice(5).replace("-","/")} {DAYS[new Date(fmtDateStr(r.date)).getDay()]}</span>
                                   <span style={S.catBreakdownPayee}>{r.payee||""}</span>
                                   {r.memo&&<span style={S.catBreakdownMemo}>「{r.memo}」</span>}
                                   <span style={S.catBreakdownAmt}>{fmtYen(r.amount)}</span>
@@ -683,9 +671,9 @@ export default function App() {
                   <tbody>
                     {Object.keys(byDate).sort().map(date=>{
                       const dayTotal=Object.values(byDate[date]).reduce((a,b)=>a+b,0);
-                      const dow=DAYS[new Date(date).getDay()];
-                      const isSun=new Date(date).getDay()===0;
-                      const isSat=new Date(date).getDay()===6;
+                      const dow=DAYS[new Date(fmtDateStr(date)).getDay()];
+                      const isSun=new Date(fmtDateStr(date)).getDay()===0;
+                      const isSat=new Date(fmtDateStr(date)).getDay()===6;
                       const isToday=date===todayDate;
                       const dayRecs=monthRecords.filter(r=>r.date===date);
                       const dateColor=isSun?"#e07a5f":isSat?"#4f7cac":"#444";
@@ -693,7 +681,7 @@ export default function App() {
                         <Fragment key={date}>
                           <tr style={isToday?S.trToday:{}}>
                             <td style={{...S.td,...S.thSticky,color:dateColor,background:isToday?"#eef4fb":"#fff"}}>
-                              {date.slice(5).replace("-","/")}
+                              {fmtDateStr(date).slice(5).replace("-","/")}
                               <span style={{fontSize:11,color:dateColor,opacity:.7,marginLeft:3}}>{dow}</span>
                               {isToday&&<span style={S.todayBadge}>今日</span>}
                             </td>
@@ -721,7 +709,7 @@ export default function App() {
                               <tr key={cellKey+"-d"} style={{background:"#f7f7f4"}}>
                                 <td colSpan={usedCats.length+2} style={{padding:"6px 12px 10px",borderBottom:"2px solid #e0e0da"}}>
                                   <div style={{fontSize:11,fontWeight:700,color:"#888",marginBottom:6,letterSpacing:.5}}>
-                                    {date.slice(5).replace("-","/")} {dow} · {c}
+                                    {fmtDateStr(date).slice(5).replace("-","/")} {dow} · {c}
                                   </div>
                                   {recs.map(r=>(
                                     <div key={r.id} style={S.detailRow}>
@@ -846,7 +834,7 @@ export default function App() {
                             <div style={S.catBreakdown}>
                               {recs.map(r=>(
                                 <div key={r.id} style={S.catBreakdownRow}>
-                                  <span style={S.catBreakdownDate}>{r.date.slice(5).replace("-","/")} {DAYS[new Date(r.date).getDay()]}</span>
+                                  <span style={S.catBreakdownDate}>{fmtDateStr(r.date).slice(5).replace("-","/")} {DAYS[new Date(fmtDateStr(r.date)).getDay()]}</span>
                                   <span style={S.catBreakdownPayee}>{r.payee||""}</span>
                                   {r.memo&&<span style={S.catBreakdownMemo}>「{r.memo}」</span>}
                                   <span style={S.catBreakdownAmt}>{fmtYen(r.amount)}</span>
@@ -1041,7 +1029,7 @@ const S = {
   summaryTotal:    { display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:10 },
   summaryLabel:    { fontSize:11, fontWeight:600, color:"#888", letterSpacing:1, textTransform:"uppercase" },
   summaryAmt:      { fontSize:26, fontWeight:700 },
-  barTrack:        { height:10, borderRadius:10, overflow:"hidden", background:"#eeeee9", display:"flex", marginBottom:12 },
+  barTrack:        { height:40, borderRadius:10, overflow:"hidden", background:"#eeeee9", display:"flex", marginBottom:12 },
   catSummaryList:  { display:"flex", flexDirection:"column", gap:1 },
   catSummaryRow:   { display:"flex", alignItems:"center", gap:8, padding:"8px 10px", borderRadius:8, cursor:"pointer" },
   catSummaryRowOpen:{ background:"#f0f0ec" },
