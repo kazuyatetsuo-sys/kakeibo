@@ -1076,7 +1076,7 @@ const S = {
   cardTitle:       { fontSize:18, fontWeight:700, marginBottom:20, textAlign:"center" },
   navRow:          { display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:16 },
   arrowBtn:        { background:"none", border:"1px solid #e0e0dc", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:14 },
-  rowTwo:          { display:"flex", gap:12 },
+  rowTwo:          { display:"flex", gap:10, flexWrap:"wrap" },
   label:           { display:"block", fontSize:11, fontWeight:600, color:"#888", letterSpacing:1, textTransform:"uppercase", marginBottom:5, marginTop:14 },
   rowLabel:        { display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:14, marginBottom:5 },
   editLink:        { fontSize:12, color:"#4f7cac", background:"none", border:"none", cursor:"pointer", padding:0 },
