@@ -288,16 +288,17 @@ export default function App() {
   const showToast = (msg,type="info") => { setToast({msg,type}); setTimeout(()=>setToast({msg:"",type:"info"}),2200); };
 
   // ── GASからデータ取得 ──
+  // 書き込み中フラグ（useRefで管理してレンダリングに影響させない）
+  const isWriting = typeof window !== "undefined" ? (window._kakeiboWriting = window._kakeiboWriting || {v:false}) : {v:false};
+
   const fetchAll = async () => {
     if(!GAS_URL) return;
+    if(isWriting.v) return; // 書き込み中はスキップ
     setSyncing(true);
     try {
       const res = await (await fetch(`${GAS_URL}?action=getAll`)).json();
-      if(res.ok){
-        // GASにデータがある場合のみ上書き（空なら保持）
-        if(res.records && res.records.length > 0){
-          setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
-        }
+      if(res.ok && !isWriting.v){
+        setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
         const s=res.settings||{};
         if(s.categories)    setCategories(s.categories);
         if(s.catPayees)     setCatPayees(s.catPayees);
@@ -318,22 +319,13 @@ export default function App() {
 
   const syncPost = async (body) => {
     if(!GAS_URL) return;
+    isWriting.v = true; // 書き込み開始
     setSyncing(true);
     try {
       await gasPost(body);
     } catch(e) { console.warn("GAS sync error:", e); }
-    setSyncing(false);
-  };
-
-  const syncPostAndRefresh = async (body) => {
-    if(!GAS_URL) return;
-    setSyncing(true);
-    try {
-      await gasPost(body);
-      // 書き込み完了後に1秒待ってから取得
-      await new Promise(r=>setTimeout(r,1000));
-      await fetchAll();
-    } catch(e) { console.warn("GAS sync error:", e); }
+    // 書き込み完了後3秒はfetchAllをブロック
+    setTimeout(()=>{ isWriting.v = false; }, 3000);
     setSyncing(false);
   };
 
