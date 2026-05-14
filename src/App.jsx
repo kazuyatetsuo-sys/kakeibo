@@ -119,6 +119,44 @@ function CatPayeeEditor({ categories, catPayees, onSave, onClose }) {
 }
 
 
+
+// ── EditRecordModal: レコード編集モーダル ─────────────────────────────────────
+function EditRecordModal({ record, categories, catColors, bizCategories, bizCatColors, onSave, onClose }) {
+  const [r, setR] = useState({...record});
+  return (
+    <div style={S.overlay}>
+      <div style={S.modal}>
+        <h3 style={S.modalTitle}>記録を編集</h3>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+          <div>
+            <label style={{...S.label,marginTop:0}}>日付</label>
+            <input style={{...S.input,width:"100%",boxSizing:"border-box"}} type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} />
+          </div>
+          <div>
+            <label style={{...S.label,marginTop:0}}>金額（円）</label>
+            <input style={{...S.input,textAlign:"right",fontWeight:700}} type="number" value={r.amount} onChange={e=>setR(v=>({...v,amount:Number(e.target.value)}))} />
+          </div>
+        </div>
+        <label style={S.label}>カテゴリー</label>
+        <div style={S.chips}>
+          {(r.isBiz?bizCategories:categories).map(c=>(
+            <button key={c} style={{...S.chip,...(r.category===c?{background:(r.isBiz?bizCatColors:catColors)[c],color:"#fff",borderColor:(r.isBiz?bizCatColors:catColors)[c]}:{})}}
+              onClick={()=>setR(v=>({...v,category:c}))}>{c}</button>
+          ))}
+        </div>
+        <label style={S.label}>支払い先</label>
+        <input style={S.input} placeholder="支払い先" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
+        <label style={S.label}>メモ</label>
+        <input style={S.input} placeholder="メモ" value={r.memo||""} onChange={e=>setR(v=>({...v,memo:e.target.value}))} />
+        <div style={{...S.modalBtns,marginTop:20}}>
+          <button style={S.cancelBtn} onClick={onClose}>キャンセル</button>
+          <button style={S.saveBtn} onClick={()=>onSave(r)}>保存</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── FixedCandidateRow: 固定費候補の1行 ───────────────────────────────────────
 function FixedCandidateRow({ item, catColors, isRecorded, viewYear, viewMonth, onRecord }) {
   const pad = n => String(n).padStart(2,"0");
@@ -242,6 +280,7 @@ export default function App() {
   const [expandedDate, setExpandedDate] = useState(null);
   const [expandedCat,  setExpandedCat]  = useState(null);
   const [toast, setToast] = useState({msg:"",type:"info"});
+  const [editingRecord, setEditingRecord] = useState(null); // 編集中のレコード
 
   const catColors    = {}; categories.forEach((c,i)=>{catColors[c]=PALETTE[i%PALETTE.length];});
   const bizCatColors = {}; bizCategories.forEach((c,i)=>{bizCatColors[c]=PALETTE[(i+4)%PALETTE.length];});
@@ -255,7 +294,10 @@ export default function App() {
     try {
       const res = await (await fetch(`${GAS_URL}?action=getAll`)).json();
       if(res.ok){
-        if(res.records) setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
+        // GASにデータがある場合のみ上書き（空なら保持）
+        if(res.records && res.records.length > 0){
+          setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
+        }
         const s=res.settings||{};
         if(s.categories)    setCategories(s.categories);
         if(s.catPayees)     setCatPayees(s.catPayees);
@@ -277,7 +319,21 @@ export default function App() {
   const syncPost = async (body) => {
     if(!GAS_URL) return;
     setSyncing(true);
-    try { await gasPost(body); } catch(e) { console.warn("GAS sync error:", e); }
+    try {
+      await gasPost(body);
+    } catch(e) { console.warn("GAS sync error:", e); }
+    setSyncing(false);
+  };
+
+  const syncPostAndRefresh = async (body) => {
+    if(!GAS_URL) return;
+    setSyncing(true);
+    try {
+      await gasPost(body);
+      // 書き込み完了後に1秒待ってから取得
+      await new Promise(r=>setTimeout(r,1000));
+      await fetchAll();
+    } catch(e) { console.warn("GAS sync error:", e); }
     setSyncing(false);
   };
 
@@ -329,6 +385,14 @@ export default function App() {
     } else {
       syncPost({action:"addRecord",record:newRecs[0]});
     }
+  };
+
+  const updateRecord = (updated) => {
+    setRecords(prev=>prev.map(r=>r.id===updated.id?updated:r));
+    setEditingRecord(null);
+    showToast("更新しました ✓");
+    syncPost({action:"deleteRecord",id:updated.id});
+    syncPost({action:"addRecord",record:updated});
   };
 
   const deleteRecord = (id) => {
@@ -537,6 +601,7 @@ export default function App() {
                       </div>
                     </div>
                     <span style={S.recAmt}>{fmtYen(r.amount)}</span>
+                    <button style={S.editBtn} onClick={()=>setEditingRecord({...r})}>編集</button>
                     <button style={S.delBtn} onClick={()=>deleteRecord(r.id)}>×</button>
                   </div>
                 ))}
@@ -915,6 +980,15 @@ export default function App() {
 
       {tab==="input" && <button style={S.fixedFab} onClick={()=>setTab("fixed")}>固定費</button>}
 
+      {editingRecord && (
+        <EditRecordModal
+          record={editingRecord}
+          categories={categories} catColors={catColors}
+          bizCategories={bizCategories} bizCatColors={bizCatColors}
+          onSave={updateRecord}
+          onClose={()=>setEditingRecord(null)}
+        />
+      )}
       {editingCat        && <TagEditor title="カテゴリー" items={categories} onSave={list=>{setCategories(list);saveSettings({categories:list});}} onClose={()=>setEditingCat(false)} />}
       {editingBizCat     && <TagEditor title="事業経費カテゴリー" items={bizCategories} onSave={list=>{setBizCategories(list);saveSettings({bizCategories:list});}} onClose={()=>setEditingBizCat(false)} />}
       {editingCatPayee   && <CatPayeeEditor categories={categories} catPayees={catPayees} onSave={map=>{setCatPayees(map);saveSettings({catPayees:map});}} onClose={()=>setEditingCatPayee(false)} />}
@@ -968,6 +1042,7 @@ const S = {
   recAmt:          { fontSize:15, fontWeight:700, flexShrink:0 },
   dot:             { width:8, height:8, borderRadius:"50%", flexShrink:0, display:"inline-block" },
   delBtn:          { background:"none", border:"none", color:"#ccc", cursor:"pointer", fontSize:16, padding:"0 2px", flexShrink:0 },
+  editBtn:         { background:"none", border:"1px solid #ddd", borderRadius:6, color:"#888", cursor:"pointer", fontSize:11, padding:"2px 7px", flexShrink:0, fontFamily:"inherit" },
   badgeFixed:      { fontSize:10, background:"#eef4fb", color:"#4f7cac", borderRadius:4, padding:"1px 5px", fontWeight:600 },
   badgeBiz:        { fontSize:10, background:"#edfaf5", color:"#3aaa82", borderRadius:4, padding:"1px 5px", fontWeight:600 },
   summaryBox:      { background:"#fafaf8", borderRadius:12, padding:"16px", marginBottom:20, border:"1px solid #eeeee9" },
