@@ -431,8 +431,7 @@ export default function App() {
 
   const todayDate    = todayStr();
   const fixedTotal   = fixedCosts.reduce((s,f)=>s+f.amount,0);
-  const payeesToShow = form.isBiz&&form.bizCategory ? (bizCatPayees[form.bizCategory]||[])
-                     : form.category                 ? (catPayees[form.category]||[]) : [];
+  const payeesToShow = form.category ? (catPayees[form.category]||[]) : [];
 
   return (
     <div style={S.app}>
@@ -471,21 +470,6 @@ export default function App() {
               </div>
             </div>
 
-            <div style={S.toggleRow}>
-              <div style={S.toggleItem} onClick={()=>setForm(f=>({...f,isFixed:!f.isFixed}))}>
-                <span style={S.toggleLabel}>固定費</span>
-                <div style={{...S.toggleSwitch,...(form.isFixed?S.toggleSwitchOn:{})}}>
-                  <div style={{...S.toggleThumb,...(form.isFixed?S.toggleThumbOn:{})}} />
-                </div>
-              </div>
-              <div style={{...S.toggleItem,borderBottom:"none"}} onClick={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:"",payee:""}))}>
-                <span style={S.toggleLabel}>事業経費</span>
-                <div style={{...S.toggleSwitch,...(form.isBiz?S.toggleSwitchBiz:{})}}>
-                  <div style={{...S.toggleThumb,...(form.isBiz?S.toggleThumbOn:{})}} />
-                </div>
-              </div>
-            </div>
-
             {/* カテゴリー：常に表示 */}
             <div>
               <div style={S.rowLabel}>
@@ -500,6 +484,29 @@ export default function App() {
               </div>
             </div>
 
+            {/* 支払い先：カテゴリー選択後に表示 */}
+            {payeesToShow.length>0 && (
+              <div>
+                <div style={S.rowLabel}>
+                  <label style={{...S.label,marginTop:0}}>支払い先</label>
+                  <button style={S.editLink} onClick={()=>setEditingCatPayee(true)}>編集</button>
+                </div>
+                <div style={S.chips}>
+                  {payeesToShow.map(p=>(
+                    <button key={p} style={{...S.chip,...(form.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}}
+                      onClick={()=>setForm(f=>({...f,payee:p}))}>{p}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {payeesToShow.length===0 && form.category && (
+              <div style={{marginTop:8}}>
+                <button style={S.editLink} onClick={()=>setEditingCatPayee(true)}>
+                  + このカテゴリーの支払い先を登録する
+                </button>
+              </div>
+            )}
+
             {/* 事業経費カテゴリー：事業経費ONのときだけ追加表示 */}
             {form.isBiz && (
               <div style={S.bizCatSection}>
@@ -513,7 +520,7 @@ export default function App() {
                       style={{...S.chip,...(form.bizCategory===c
                         ?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}
                         :{borderColor:"#6dbf9e",color:"#3aaa82"})}}
-                      onClick={()=>setForm(f=>({...f,bizCategory:f.bizCategory===c?"":c,payee:""}))}>
+                      onClick={()=>setForm(f=>({...f,bizCategory:f.bizCategory===c?"":c}))}>
                       {c}
                     </button>
                   ))}
@@ -521,27 +528,21 @@ export default function App() {
               </div>
             )}
 
-            {payeesToShow.length>0 && (
-              <div>
-                <div style={S.rowLabel}>
-                  <label style={{...S.label,marginTop:0}}>支払い先</label>
-                  <button style={S.editLink} onClick={()=>form.isBiz?setEditingBizCatPayee(true):setEditingCatPayee(true)}>編集</button>
-                </div>
-                <div style={S.chips}>
-                  {payeesToShow.map(p=>(
-                    <button key={p} style={{...S.chip,...(form.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}}
-                      onClick={()=>setForm(f=>({...f,payee:p}))}>{p}</button>
-                  ))}
+            {/* 固定費・事業経費トグル */}
+            <div style={S.toggleRow}>
+              <div style={S.toggleItem} onClick={()=>setForm(f=>({...f,isFixed:!f.isFixed}))}>
+                <span style={S.toggleLabel}>固定費</span>
+                <div style={{...S.toggleSwitch,...(form.isFixed?S.toggleSwitchOn:{})}}>
+                  <div style={{...S.toggleThumb,...(form.isFixed?S.toggleThumbOn:{})}} />
                 </div>
               </div>
-            )}
-            {payeesToShow.length===0 && (form.category||form.bizCategory) && (
-              <div style={{marginTop:8}}>
-                <button style={S.editLink} onClick={()=>form.isBiz?setEditingBizCatPayee(true):setEditingCatPayee(true)}>
-                  + このカテゴリーの支払い先を登録する
-                </button>
+              <div style={{...S.toggleItem,borderBottom:"none"}} onClick={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:""}))}>
+                <span style={S.toggleLabel}>事業経費</span>
+                <div style={{...S.toggleSwitch,...(form.isBiz?S.toggleSwitchBiz:{})}}>
+                  <div style={{...S.toggleThumb,...(form.isBiz?S.toggleThumbOn:{})}} />
+                </div>
               </div>
-            )}
+            </div>
 
             <label style={S.label}>メモ</label>
             <input style={S.input} placeholder="任意" value={form.memo} onChange={e=>setForm(f=>({...f,memo:e.target.value}))} />
