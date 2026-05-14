@@ -1,38 +1,7 @@
 import { useState, useEffect, Fragment } from "react";
 
 // ── サンプルデータ ─────────────────────────────────────────────────────────────
-const SAMPLE_RECORDS = [
-  {id:1,  date:"2026-05-01", amount:12800, category:"食費",     payee:"スーパー",     memo:"週末まとめ買い", isFixed:false, isBiz:false},
-  {id:2,  date:"2026-05-01", amount:980,   category:"交通費",   payee:"電車・バス",   memo:"",              isFixed:false, isBiz:false},
-  {id:3,  date:"2026-05-02", amount:3200,  category:"外食",     payee:"レストラン",   memo:"家族の夕食",     isFixed:false, isBiz:false},
-  {id:4,  date:"2026-05-03", amount:1580,  category:"日用品",   payee:"ドラッグストア",memo:"シャンプー等",   isFixed:false, isBiz:false},
-  {id:5,  date:"2026-05-05", amount:4500,  category:"娯楽",     payee:"映画",         memo:"GWお出かけ",    isFixed:false, isBiz:false},
-  {id:6,  date:"2026-05-07", amount:8200,  category:"光熱費",   payee:"電力会社",     memo:"4月分",         isFixed:true,  isBiz:false},
-  {id:7,  date:"2026-05-07", amount:2300,  category:"通信費",   payee:"携帯会社",     memo:"",              isFixed:true,  isBiz:false},
-  {id:8,  date:"2026-05-08", amount:6800,  category:"食費",     payee:"スーパー",     memo:"",              isFixed:false, isBiz:false},
-  {id:9,  date:"2026-05-08", amount:1200,  category:"外食",     payee:"カフェ",       memo:"ランチ",        isFixed:false, isBiz:false},
-  {id:10, date:"2026-05-10", amount:15000, category:"衣類",     payee:"ユニクロ",     memo:"春服まとめ買い", isFixed:false, isBiz:false},
-  {id:11, date:"2026-05-10", amount:3500,  category:"医療・健康",payee:"病院",         memo:"定期検診",      isFixed:false, isBiz:false},
-  {id:12, date:"2026-05-12", amount:890,   category:"食費",     payee:"コンビニ",     memo:"",              isFixed:false, isBiz:false},
-  {id:13, date:"2026-05-12", amount:5400,  category:"教育",     payee:"書籍",         memo:"参考書",        isFixed:false, isBiz:false},
-  {id:14, date:"2026-05-13", amount:2100,  category:"食費",     payee:"スーパー",     memo:"",              isFixed:false, isBiz:false},
-  {id:15, date:"2026-05-13", amount:1800,  category:"外食",     payee:"カフェ",       memo:"友人と",        isFixed:false, isBiz:false},
-  {id:16, date:"2026-05-14", amount:780,   category:"交通費",   payee:"電車・バス",   memo:"",              isFixed:false, isBiz:false},
-  {id:17, date:"2026-05-02", amount:5500,  category:"通信費",   payee:"プロバイダ",   memo:"光回線",        isFixed:true,  isBiz:true},
-  {id:18, date:"2026-05-08", amount:12000, category:"接待交際費",payee:"レストラン",   memo:"クライアント接待",isFixed:false, isBiz:true},
-  {id:19, date:"2026-05-10", amount:3200,  category:"消耗品",   payee:"Amazon",       memo:"プリンターインク",isFixed:false, isBiz:true},
-  {id:20, date:"2026-05-12", amount:8800,  category:"交通費",   payee:"新幹線",       memo:"出張 東京-大阪", isFixed:false, isBiz:true},
-  {id:21, date:"2026-04-03", amount:11200, category:"食費",     payee:"スーパー",     memo:"",              isFixed:false, isBiz:false},
-  {id:22, date:"2026-04-05", amount:4200,  category:"外食",     payee:"レストラン",   memo:"",              isFixed:false, isBiz:false},
-  {id:23, date:"2026-04-10", amount:8500,  category:"光熱費",   payee:"電力会社",     memo:"3月分",         isFixed:true,  isBiz:false},
-  {id:24, date:"2026-04-15", amount:25000, category:"医療・健康",payee:"歯科",         memo:"矯正",          isFixed:false, isBiz:false},
-  {id:25, date:"2026-04-20", amount:6800,  category:"娯楽",     payee:"サブスク",     memo:"Netflix等",     isFixed:true,  isBiz:false},
-  {id:26, date:"2026-04-22", amount:3300,  category:"日用品",   payee:"ホームセンター",memo:"",              isFixed:false, isBiz:false},
-  {id:27, date:"2026-03-05", amount:9800,  category:"食費",     payee:"スーパー",     memo:"",              isFixed:false, isBiz:false},
-  {id:28, date:"2026-03-12", amount:18000, category:"衣類",     payee:"ZARA",         memo:"冬物セール",    isFixed:false, isBiz:false},
-  {id:29, date:"2026-03-15", amount:7600,  category:"光熱費",   payee:"電力会社",     memo:"2月分",         isFixed:true,  isBiz:false},
-  {id:30, date:"2026-03-20", amount:12000, category:"教育",     payee:"セミナー",     memo:"",              isFixed:false, isBiz:false},
-];
+const SAMPLE_RECORDS = [];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES     = ["食費","交通費","日用品","娯楽","医療・健康","美容","光熱費","通信費","外食","衣類","教育","その他"];
@@ -279,6 +248,32 @@ export default function App() {
 
   const showToast = (msg,type="info") => { setToast({msg,type}); setTimeout(()=>setToast({msg:"",type:"info"}),2200); };
 
+  // ── GASからデータ取得 ──
+  const fetchAll = async () => {
+    if(!GAS_URL) return;
+    setSyncing(true);
+    try {
+      const res = await (await fetch(`${GAS_URL}?action=getAll`)).json();
+      if(res.ok){
+        if(res.records) setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
+        const s=res.settings||{};
+        if(s.categories)    setCategories(s.categories);
+        if(s.catPayees)     setCatPayees(s.catPayees);
+        if(s.bizCategories) setBizCategories(s.bizCategories);
+        if(s.bizCatPayees)  setBizCatPayees(s.bizCatPayees);
+        if(s.fixedCosts)    setFixedCosts(s.fixedCosts);
+      }
+    } catch(e){ console.warn("fetchAll error:",e); }
+    setSyncing(false);
+  };
+
+  useEffect(()=>{
+    if(!GAS_URL) return;
+    fetchAll();
+    const interval = setInterval(()=>fetchAll(), 30000);
+    return ()=>clearInterval(interval);
+  },[]);
+
   const syncPost = async (body) => {
     if(!GAS_URL) return;
     setSyncing(true);
@@ -408,22 +403,33 @@ export default function App() {
         {tab==="input" && (
           <div style={S.card}>
             <h2 style={S.cardTitle}>支出を記録</h2>
-            <div>
-              <label style={{...S.label,marginTop:0}}>日付</label>
-              <input
-                style={{...S.input, width:"100%", boxSizing:"border-box"}}
-                type="date"
-                value={form.date}
-                onChange={e=>setForm(f=>({...f,date:e.target.value}))} />
-            </div>
-            <div style={{marginTop:10}}>
-              <label style={{...S.label,marginTop:0}}>金額（円）</label>
-              <input style={{...S.input,fontSize:22,fontWeight:700,textAlign:"right"}} type="number" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div>
+                <label style={{...S.label,marginTop:0}}>日付</label>
+                <input
+                  style={{...S.input,width:"100%",boxSizing:"border-box"}}
+                  type="date" value={form.date}
+                  onChange={e=>setForm(f=>({...f,date:e.target.value}))} />
+              </div>
+              <div>
+                <label style={{...S.label,marginTop:0}}>金額（円）</label>
+                <input style={{...S.input,fontSize:18,fontWeight:700,textAlign:"right"}} type="number" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+              </div>
             </div>
 
             <div style={S.toggleRow}>
-              <button style={{...S.toggleBtn,...(form.isFixed?S.toggleOn:{})}} onClick={()=>setForm(f=>({...f,isFixed:!f.isFixed}))}>📌 固定費</button>
-              <button style={{...S.toggleBtn,...(form.isBiz?S.toggleOnBiz:{})}} onClick={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:"",payee:""}))}>💼 事業経費</button>
+              <div style={S.toggleItem} onClick={()=>setForm(f=>({...f,isFixed:!f.isFixed}))}>
+                <span style={S.toggleLabel}>固定費</span>
+                <div style={{...S.toggleSwitch,...(form.isFixed?S.toggleSwitchOn:{})}}>
+                  <div style={{...S.toggleThumb,...(form.isFixed?S.toggleThumbOn:{})}} />
+                </div>
+              </div>
+              <div style={{...S.toggleItem,borderBottom:"none"}} onClick={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:"",payee:""}))}>
+                <span style={S.toggleLabel}>事業経費</span>
+                <div style={{...S.toggleSwitch,...(form.isBiz?S.toggleSwitchBiz:{})}}>
+                  <div style={{...S.toggleThumb,...(form.isBiz?S.toggleThumbOn:{})}} />
+                </div>
+              </div>
             </div>
 
             {!form.isBiz && (
@@ -445,7 +451,7 @@ export default function App() {
               <div style={S.bizCatSection}>
                 {/* 事業経費カテゴリー */}
                 <div style={S.rowLabel}>
-                  <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>💼 事業カテゴリー</label>
+                  <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
                   <button style={S.editLink} onClick={()=>setEditingBizCat(true)}>編集</button>
                 </div>
                 <div style={S.chips}>
@@ -750,7 +756,7 @@ export default function App() {
         {/* ══ 事業経費 ══ */}
         {tab==="biz" && (
           <div style={S.card}>
-            <h2 style={S.cardTitle}>💼 事業経費</h2>
+            <h2 style={S.cardTitle}>事業経費</h2>
             <div style={S.navRow}>
               <button style={S.arrowBtn} onClick={()=>{ if(bizViewMonth===1){setBizViewMonth(12);setBizViewYear(y=>y-1);}else setBizViewMonth(m=>m-1); }}>◀</button>
               <span style={{fontWeight:600,fontSize:15}}>{bizViewYear}年 {bizViewMonth}月</span>
@@ -862,7 +868,7 @@ export default function App() {
         {tab==="fixed" && (
           <div style={S.card}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{...S.cardTitle,marginBottom:0}}>📌 固定費候補</h2>
+              <h2 style={{...S.cardTitle,marginBottom:0}}>固定費候補</h2>
               <button style={S.editLink} onClick={()=>setEditingFixed(true)}>候補を編集</button>
             </div>
 
@@ -907,7 +913,7 @@ export default function App() {
 
       </main>
 
-      {tab==="input" && <button style={S.fixedFab} onClick={()=>setTab("fixed")}>📌 固定費</button>}
+      {tab==="input" && <button style={S.fixedFab} onClick={()=>setTab("fixed")}>固定費</button>}
 
       {editingCat        && <TagEditor title="カテゴリー" items={categories} onSave={list=>{setCategories(list);saveSettings({categories:list});}} onClose={()=>setEditingCat(false)} />}
       {editingBizCat     && <TagEditor title="事業経費カテゴリー" items={bizCategories} onSave={list=>{setBizCategories(list);saveSettings({bizCategories:list});}} onClose={()=>setEditingBizCat(false)} />}
@@ -940,10 +946,17 @@ const S = {
   chips:           { display:"flex", flexWrap:"wrap", gap:6 },
   chip:            { padding:"7px 14px", border:"1px solid #ddd", borderRadius:20, fontSize:13, background:"#fafaf8", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
   primaryBtn:      { marginTop:12, width:"100%", padding:"16px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:12, fontSize:16, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
-  toggleRow:       { display:"flex", gap:8, marginTop:14 },
+  toggleRow:       { display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:14 },
+  toggleItem:      { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 12px", cursor:"pointer", background:"#fafaf8", borderRadius:10, border:"1px solid #eeeee9" },
+  toggleLabel:     { fontSize:12, color:"#888", fontWeight:500 },
+  toggleSwitch:    { width:36, height:22, borderRadius:11, background:"#ddd", position:"relative", transition:"background .25s", flexShrink:0 },
+  toggleSwitchOn:  { background:"#4f7cac" },
+  toggleSwitchBiz: { background:"#3aaa82" },
+  toggleThumb:     { width:18, height:18, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:2, transition:"left .25s", boxShadow:"0 1px 3px rgba(0,0,0,.2)" },
+  toggleThumbOn:   { left:16 },
   toggleBtn:       { flex:1, padding:"12px", border:"1px solid #ddd", borderRadius:10, fontSize:14, fontWeight:600, background:"#fafaf8", cursor:"pointer", fontFamily:"inherit", color:"#777" },
-  toggleOn:        { background:"#4f7cac", color:"#fff", borderColor:"#4f7cac" },
-  toggleOnBiz:     { background:"#3aaa82", color:"#fff", borderColor:"#3aaa82" },
+  toggleOn:        { background:"#4f7cac", color:"#fff", borderColor:"#4f7cac", fontWeight:600 },
+  toggleOnBiz:     { background:"#3aaa82", color:"#fff", borderColor:"#3aaa82", fontWeight:600 },
   bizCatSection:   { background:"#edfaf5", borderRadius:10, padding:"12px", marginTop:10, border:"1px solid #b2e0d0" },
   sectionTitle:    { fontSize:11, fontWeight:700, color:"#aaa", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
   recRow:          { display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:"1px solid #f0f0ec" },
