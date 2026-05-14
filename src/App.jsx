@@ -303,7 +303,7 @@ export default function App() {
     try {
       const res = await (await fetch(`${GAS_URL}?action=getAll`)).json();
       if(res.ok && !isWriting.v){
-        setRecords(res.records.map(r=>({...r,amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
+        setRecords(res.records.map(r=>({...r,date:fmtDateStr(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE"})));
         const s=res.settings||{};
         if(s.categories)    setCategories(s.categories);
         if(s.catPayees)     setCatPayees(s.catPayees);
@@ -335,14 +335,18 @@ export default function App() {
   };
 
   const addRecord = () => {
-    const cat = form.isBiz ? form.bizCategory : form.category;
-    if(!form.amount||!cat||!form.date){ showToast("日付・金額・カテゴリーは必須です","error"); return; }
+    const normalCat = form.category;
+    const bizCat    = form.isBiz ? form.bizCategory : "";
+    const primaryCat = normalCat || bizCat;
+    if(!form.amount||!primaryCat||!form.date){ showToast("日付・金額・カテゴリーは必須です","error"); return; }
 
+    // 1件のデータに両方のカテゴリーを保持
     const rec = {
       id: Date.now(),
-      date: form.date,
+      date: fmtDateStr(form.date),
       amount: Number(form.amount),
-      category: cat,
+      category: normalCat,      // 通常カテゴリー → 月間タブ
+      bizCategory: bizCat,      // 事業カテゴリー → 事業経費タブ
       payee: form.payee||"",
       memo: form.memo||"",
       isFixed: form.isFixed,
@@ -353,11 +357,11 @@ export default function App() {
 
     // 固定費ONで記録したら固定費候補に自動追加
     if(form.isFixed){
-      const name = form.memo||cat;
-      const day  = Number(form.date.split("-")[2]);
-      const already = fixedCosts.some(f=>f.name===name&&f.category===cat);
+      const name = form.memo||primaryCat;
+      const day  = Number(fmtDateStr(form.date).split("-")[2]);
+      const already = fixedCosts.some(f=>f.name===name);
       if(!already){
-        const newFixed = {id:Date.now()+1, name, amount:Number(form.amount), category:cat, payee:form.payee||"", day};
+        const newFixed = {id:Date.now()+1, name, amount:Number(form.amount), category:normalCat, bizCategory:bizCat, payee:form.payee||"", day};
         const updated  = [...fixedCosts, newFixed];
         setFixedCosts(updated);
         saveSettings({fixedCosts:updated});
@@ -400,30 +404,30 @@ export default function App() {
 
   // ── 月間データ ──
   const monthRecords = records.filter(r=>{
-    const [y,m]=r.date.split("-").map(Number); return y===viewYear&&m===viewMonth&&!r.isBiz;
+    const d=fmtDateStr(r.date); const [y,m]=d.split("-").map(Number); return y===viewYear&&m===viewMonth;
   });
   const byDate={};
   monthRecords.forEach(r=>{ const d=fmtDateStr(r.date); if(!byDate[d])byDate[d]={}; byDate[d][r.category]=(byDate[d][r.category]||0)+r.amount; });
   const monthTotal = monthRecords.reduce((s,r)=>s+r.amount,0);
-  const usedCats   = categories.filter(c=>monthRecords.some(r=>r.category===c));
+  const usedCats   = categories.filter(c=>monthRecords.some(r=>r.category===c&&r.category));
   const catTotals  = {}; usedCats.forEach(c=>{catTotals[c]=monthRecords.filter(r=>r.category===c).reduce((s,r)=>s+r.amount,0);});
 
   // ── 年間データ ──
-  const yearRecords  = records.filter(r=>fmtDateStr(r.date).startsWith(String(viewYear))&&!r.isBiz);
+  const yearRecords  = records.filter(r=>fmtDateStr(r.date).startsWith(String(viewYear)));
   const byMonth={}; for(let m=1;m<=12;m++) byMonth[m]={};
   yearRecords.forEach(r=>{ const m=Number(r.date.split("-")[1]); byMonth[m][r.category]=(byMonth[m][r.category]||0)+r.amount; });
   const yearUsedCats = categories.filter(c=>yearRecords.some(r=>r.category===c));
 
   // ── 事業経費データ ──
-  const bizAllRecs   = records.filter(r=>r.isBiz);
+  const bizAllRecs   = records.filter(r=>r.isBiz&&r.bizCategory);
   const bizMonthRecs = bizAllRecs.filter(r=>{ const [y,m]=r.date.split("-").map(Number); return y===bizViewYear&&m===bizViewMonth; });
   const bizMonthTotal= bizMonthRecs.reduce((s,r)=>s+r.amount,0);
-  const bizUsedCats  = bizCategories.filter(c=>bizMonthRecs.some(r=>r.category===c));
-  const bizCatTotals = {}; bizUsedCats.forEach(c=>{bizCatTotals[c]=bizMonthRecs.filter(r=>r.category===c).reduce((s,r)=>s+r.amount,0);});
+  const bizUsedCats  = bizCategories.filter(c=>bizMonthRecs.some(r=>(r.bizCategory||r.category)===c));
+  const bizCatTotals = {}; bizUsedCats.forEach(c=>{bizCatTotals[c]=bizMonthRecs.filter(r=>(r.bizCategory||r.category)===c).reduce((s,r)=>s+r.amount,0);});
   const bizYearRecs  = bizAllRecs.filter(r=>r.date.startsWith(String(bizViewYear)));
   const bizByMonth={}; for(let m=1;m<=12;m++) bizByMonth[m]={};
   bizYearRecs.forEach(r=>{ const m=Number(r.date.split("-")[1]); bizByMonth[m][r.category]=(bizByMonth[m][r.category]||0)+r.amount; });
-  const bizYearUsedCats = bizCategories.filter(c=>bizYearRecs.some(r=>r.category===c));
+  const bizYearUsedCats = bizCategories.filter(c=>bizYearRecs.some(r=>(r.bizCategory||r.category)===c));
 
   const todayDate    = todayStr();
   const fixedTotal   = fixedCosts.reduce((s,f)=>s+f.amount,0);
@@ -482,24 +486,23 @@ export default function App() {
               </div>
             </div>
 
-            {!form.isBiz && (
-              <div>
-                <div style={S.rowLabel}>
-                  <label style={{...S.label,marginTop:0}}>カテゴリー</label>
-                  <button style={S.editLink} onClick={()=>setEditingCat(true)}>編集</button>
-                </div>
-                <div style={S.chips}>
-                  {categories.map(c=>(
-                    <button key={c} style={{...S.chip,...(form.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}}
-                      onClick={()=>setForm(f=>({...f,category:c,payee:""}))}>{c}</button>
-                  ))}
-                </div>
+            {/* カテゴリー：常に表示 */}
+            <div>
+              <div style={S.rowLabel}>
+                <label style={{...S.label,marginTop:0}}>カテゴリー</label>
+                <button style={S.editLink} onClick={()=>setEditingCat(true)}>編集</button>
               </div>
-            )}
+              <div style={S.chips}>
+                {categories.map(c=>(
+                  <button key={c} style={{...S.chip,...(form.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}}
+                    onClick={()=>setForm(f=>({...f,category:c,payee:""}))}>{c}</button>
+                ))}
+              </div>
+            </div>
 
+            {/* 事業経費カテゴリー：事業経費ONのときだけ追加表示 */}
             {form.isBiz && (
               <div style={S.bizCatSection}>
-                {/* 事業経費カテゴリー */}
                 <div style={S.rowLabel}>
                   <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
                   <button style={S.editLink} onClick={()=>setEditingBizCat(true)}>編集</button>
@@ -515,8 +518,6 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-
-
               </div>
             )}
 
@@ -558,7 +559,7 @@ export default function App() {
                       {r.payee&&<span style={S.recPayee}> · {r.payee}</span>}
                       {r.memo&&<span style={S.recMemo}> — {r.memo}</span>}
                       <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={S.recDate}>{r.date}</span>
+                        <span style={S.recDate}>{fmtDateStr(r.date)}</span>
                         {r.isFixed&&<span style={S.badgeFixed}>固定費</span>}
                         {r.isBiz&&<span style={S.badgeBiz}>事業経費</span>}
                       </div>
@@ -819,7 +820,7 @@ export default function App() {
                   </div>
                   <div style={S.catSummaryList}>
                     {bizUsedCats.map(c=>{
-                      const recs=bizMonthRecs.filter(r=>r.category===c);
+                      const recs=bizMonthRecs.filter(r=>(r.bizCategory||r.category)===c);
                       const isOpen=expandedCat==="biz:"+c;
                       return (
                         <div key={c}>
