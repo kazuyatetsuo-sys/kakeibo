@@ -66,15 +66,20 @@ function TagEditor({ title, items, onSave, onClose }) {
   const [list, setList] = useState([...items]);
   const [input, setInput] = useState("");
   const add = () => { const v=input.trim(); if(v&&!list.includes(v)){setList([...list,v]);setInput("");} };
+  const moveUp   = (i) => { if(i===0) return; const l=[...list]; [l[i-1],l[i]]=[l[i],l[i-1]]; setList(l); };
+  const moveDown = (i) => { if(i===list.length-1) return; const l=[...list]; [l[i],l[i+1]]=[l[i+1],l[i]]; setList(l); };
   return (
     <div style={S.overlay}>
       <div style={S.modal}>
         <h3 style={S.modalTitle}>{title}の編集</h3>
-        <div style={S.tagList}>
+        <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:16}}>
           {list.map((item,i)=>(
-            <span key={i} style={S.tag}>{item}
+            <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",background:"#f7f7f4",borderRadius:8}}>
+              <span style={{flex:1,fontSize:14}}>{item}</span>
+              <button style={S.sortBtn} onClick={()=>moveUp(i)} disabled={i===0}>↑</button>
+              <button style={S.sortBtn} onClick={()=>moveDown(i)} disabled={i===list.length-1}>↓</button>
               <button style={S.tagDel} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
-            </span>
+            </div>
           ))}
         </div>
         <div style={S.tagInputRow}>
@@ -1155,6 +1160,7 @@ const S = {
   tagList:         { display:"flex", flexWrap:"wrap", gap:6, marginBottom:16, minHeight:32 },
   tag:             { display:"flex", alignItems:"center", gap:4, padding:"4px 10px", background:"#f0f0ec", borderRadius:20, fontSize:13 },
   tagDel:          { background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14, padding:0, lineHeight:1 },
+  sortBtn:         { background:"none", border:"1px solid #ddd", borderRadius:6, cursor:"pointer", color:"#888", fontSize:12, padding:"2px 7px", fontFamily:"inherit", lineHeight:1.4 },
   tagInputRow:     { display:"flex", gap:8, marginBottom:16 },
   tagInput:        { flex:1, padding:"8px 12px", border:"1px solid #e0e0dc", borderRadius:8, fontSize:14, outline:"none", fontFamily:"inherit", background:"#fafaf8", boxSizing:"border-box" },
   addBtn:          { padding:"8px 16px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit" },
