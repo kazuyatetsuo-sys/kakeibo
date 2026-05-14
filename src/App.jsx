@@ -694,7 +694,7 @@ export default function App() {
                             <span style={{position:"absolute",left:6,top:"50%",transform:"translateY(-50%)",
                               fontSize:11,fontWeight:600,color:"rgba(255,255,255,.9)",whiteSpace:"nowrap",
                               overflow:"hidden",maxWidth:"calc(100% - 8px)"}}>
-                              {pct>15?c:""}{pct>20?` ${fmtYen(catTotals[c])}`:""}
+                              {pct>15?c:""}
                             </span>
                           )}
                         </div>
