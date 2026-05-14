@@ -788,6 +788,32 @@ export default function App() {
                 </table>
               </div>
             )}
+
+            {/* ── 当月データ一覧 ── */}
+            {monthRecords.length>0 && (
+              <div style={{marginTop:24}}>
+                <p style={S.sectionTitle}>当月の記録一覧（{monthRecords.length}件）</p>
+                {[...monthRecords].sort((a,b)=>fmtDateStr(b.date).localeCompare(fmtDateStr(a.date))).map(r=>(
+                  <div key={r.id} style={S.recRow}>
+                    <span style={{...S.dot,background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"#aaa",marginTop:5}} />
+                    <div style={S.recInfo}>
+                      <span style={S.recCat}>{r.category}</span>
+                      {r.isBiz&&r.bizCategory&&<span style={{...S.badgeBiz,marginLeft:4}}>{r.bizCategory}</span>}
+                      {r.payee&&<span style={S.recPayee}> · {r.payee}</span>}
+                      {r.memo&&<span style={S.recMemo}> — {r.memo}</span>}
+                      <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
+                        <span style={S.recDate}>{fmtDateStr(r.date).slice(5).replace("-","/")} {DAYS[new Date(fmtDateStr(r.date)).getDay()]}</span>
+                        {r.isFixed&&<span style={S.badgeFixed}>固定費</span>}
+                        {r.isBiz&&<span style={S.badgeBiz}>事業経費</span>}
+                      </div>
+                    </div>
+                    <span style={S.recAmt}>{fmtYen(r.amount)}</span>
+                    <button style={S.editBtn} onClick={()=>setEditingRecord({...r})}>編集</button>
+                    <button style={S.delBtn} onClick={()=>deleteRecord(r.id)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1102,10 +1128,10 @@ const S = {
   catBreakdownMemo:{ color:"#aaa", fontSize:12 },
   catBreakdownAmt: { fontWeight:700, marginLeft:"auto", flexShrink:0 },
   empty:           { textAlign:"center", color:"#bbb", padding:"32px 0", fontSize:14 },
-  tableWrap:       { overflowX:"auto", borderRadius:10, border:"1px solid #eeeee9" },
+  tableWrap:       { overflowX:"auto", overflowY:"auto", maxHeight:"60vh", borderRadius:10, border:"1px solid #eeeee9" },
   table:           { width:"100%", borderCollapse:"collapse", fontSize:13 },
-  th:              { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap" },
-  thSticky:        { textAlign:"left", position:"sticky", left:0, zIndex:2, background:"#fafaf8", minWidth:72, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
+  th:              { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3 },
+  thSticky:        { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:72, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
   thTotal:         { background:"#f0f0ec", color:"#333" },
   td:              { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid #f2f2ee", fontSize:13, color:"#333", whiteSpace:"nowrap" },
   tdTotal:         { fontWeight:600, background:"#fafaf8" },
