@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from "react";
 const SAMPLE_RECORDS = [];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
-const DEFAULT_CATEGORIES     = ["食費","交通費","日用品","娯楽","医療・健康","美容","光熱費","通信費","外食","衣類","教育","その他"];
+const DEFAULT_CATEGORIES     = ["Groceries","Dining out","Daily","Activities","Kids","Online","Dogu","Health","Utilities","Clothing","Transport","Government","Rent","Travel","Other"];
 const DEFAULT_BIZ_CATEGORIES = ["通信費","交通費","消耗品","接待交際費","広告宣伝費","外注費","地代家賃","水道光熱費","その他経費"];
 const DEFAULT_CAT_PAYEES = {
   "食費":["スーパー","コンビニ","業務スーパー"],
@@ -769,7 +769,7 @@ export default function App() {
                             const recs=dayRecs.filter(r=>r.category===c);
                             return (
                               <tr key={cellKey+"-d"} style={{background:"#f7f7f4"}}>
-                                <td colSpan={usedCats.length+2} style={{padding:"6px 12px 10px",borderBottom:"2px solid #e0e0da"}}>
+                                <td colSpan={usedCats.length+3} style={{padding:"6px 12px 10px",borderBottom:"2px solid #e0e0da"}}>
                                   <div style={{fontSize:11,fontWeight:700,color:"#888",marginBottom:6,letterSpacing:.5}}>
                                     {fmtDateStr(date).slice(5).replace("-","/")} {dow} · {c}
                                   </div>
