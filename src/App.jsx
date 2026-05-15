@@ -268,23 +268,18 @@ function MonthlyList({ mRecs, today, catColors, bizCatColors, onEdit, onDelete }
             </div>
             {/* 各レコード */}
             {grouped[date].map((r,i)=>(
-              <div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:"#fff",borderBottom:i<grouped[date].length-1?"1px solid #f5f5f2":"none"}}>
-                <span style={{width:9,height:9,borderRadius:"50%",background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"#ccc",flexShrink:0,display:"inline-block"}} />
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"#fff",borderBottom:i<grouped[date].length-1?"1px solid #f5f5f2":"none"}}>
                 <div style={{flex:1,minWidth:0}}>
-                  {/* 支払い先：一番大きく */}
-                  <div style={{fontSize:16,fontWeight:600,color:"#1a1a1a",marginBottom:4}}>{r.payee||"—"}</div>
-                  {/* カテゴリー・バッジ：小さく */}
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-                    <span style={{fontSize:11,color:"#999",background:"#f0f0ec",borderRadius:4,padding:"1px 7px"}}>{r.category}</span>
-                    {r.isBiz&&r.bizCategory&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{r.bizCategory}</span>}
-                    {r.isFixed&&<span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 6px",fontWeight:600}}>固定費</span>}
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                    <span style={{fontSize:14,fontWeight:500,color:"#1a1a1a"}}>{r.payee||"—"}</span>
+                    {r.isFixed&&<span style={{fontSize:10,background:"#f0f0ec",color:"#999",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
                     {r.isBiz&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
                     {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
                   </div>
                 </div>
-                <span style={{fontSize:16,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
-                <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:8,color:"#888",cursor:"pointer",fontSize:11,padding:"3px 8px",flexShrink:0,fontFamily:"inherit"}} onClick={()=>onEdit(r)}>編集</button>
-                <button style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:18,padding:"0 2px",flexShrink:0,lineHeight:1}} onClick={()=>onDelete(r.id)}>×</button>
+                <span style={{fontSize:13,fontWeight:600,flexShrink:0,color:"#333"}}>{fmtYen(r.amount)}</span>
+                <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#aaa",cursor:"pointer",fontSize:10,padding:"2px 7px",flexShrink:0,fontFamily:"inherit"}} onClick={()=>onEdit(r)}>編集</button>
+                <button style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0,lineHeight:1}} onClick={()=>onDelete(r.id)}>×</button>
               </div>
             ))}
           </div>
