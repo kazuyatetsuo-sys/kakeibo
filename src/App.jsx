@@ -615,7 +615,7 @@ export default function App() {
             {Object.keys(byDate).length>0 && (
               <div>
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"60vh",borderRadius:10,border:"1px solid #eeeee9"}}>
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                     <thead style={{position:"sticky",top:0,zIndex:5,background:"#fafaf8"}}>
                       <tr>
                         <th style={{...S.th,...S.thFix}}>日付</th>
@@ -699,7 +699,7 @@ export default function App() {
             </div>
             {yRecs.length===0 ? <p style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>この年の記録はありません</p> : (
               <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #eeeee9"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                   <thead>
                     <tr>
                       <th style={{...S.th,...S.thFix}}>月</th>
@@ -757,7 +757,7 @@ export default function App() {
             </div>
             {bzYRecs.length>0 && (
               <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #eeeee9",marginTop:8}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                   <thead>
                     <tr>
                       <th style={{...S.th,...S.thFix}}>月</th>
