@@ -502,19 +502,15 @@ export default function App() {
         {tab==="input" && (
           <div style={S.card}>
             <h2 style={S.cardTitle}>支出を記録</h2>
-            <div>
-              <label style={S.label}>日付</label>
-              <div style={{position:"relative",width:"100%"}}>
-                <div style={{...S.inp,width:"100%",boxSizing:"border-box",color:"#1a1a1a",pointerEvents:"none"}}>
-                  {form.date ? form.date.replace(/-/g,"/") : "日付を選択"}
-                </div>
-                <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                  style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}} />
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <div style={{flex:"1 1 140px",minWidth:140}}>
+                <label style={S.label}>日付</label>
+                <input style={{...S.inp,width:"100%",boxSizing:"border-box"}} type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} />
               </div>
-            </div>
-            <div>
-              <label style={S.label}>金額（円）</label>
-              <input style={{...S.inp,fontSize:20,fontWeight:700,textAlign:"right",width:"100%",boxSizing:"border-box"}} type="number" inputMode="numeric" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+              <div style={{flex:"1 1 120px",minWidth:120}}>
+                <label style={S.label}>金額（円）</label>
+                <input style={{...S.inp,fontSize:20,fontWeight:700,textAlign:"right",width:"100%",boxSizing:"border-box"}} type="number" inputMode="numeric" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+              </div>
             </div>
 
             <div style={S.rowLabel}>
