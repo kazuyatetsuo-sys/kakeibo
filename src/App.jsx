@@ -484,7 +484,7 @@ export default function App() {
           {syncing && <span style={S.sync}>同期中...</span>}
         </div>
         <nav style={S.nav}>
-          {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"]].map(([k,l])=>(
+          {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"],["card","Card"]].map(([k,l])=>(
             <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>setTab(k)}>{l}</button>
           ))}
         </nav>
@@ -793,8 +793,71 @@ export default function App() {
                 <button style={{...S.primaryBtn,flex:1,marginTop:0,background:"#5c9e7a",fontSize:13}} onClick={()=>setEditBizP(true)}>支払い先を編集</button>
               </div>
             </div>
+
+            {/* 月別履歴 */}
+            {bzMRecs.length>0 && (
+              <div style={{marginTop:20}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                  <p style={S.secTitle}>月間明細（{bzMRecs.length}件）</p>
+                  <button style={{padding:"6px 14px",background:"#3aaa82",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}
+                    onClick={()=>{
+                      const header = "日付,カテゴリー,事業カテゴリー,支払い先,金額,メモ
+";
+                      const rows = [...bzMRecs].sort((a,b)=>normDate(a.date).localeCompare(normDate(b.date))).map(r=>[
+                        normDate(r.date),
+                        r.category||"",
+                        r.bizCategory||"",
+                        r.payee||"",
+                        r.amount,
+                        r.memo||""
+                      ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("
+");
+                      const bom = "﻿";
+                      const blob = new Blob([bom+header+rows],{type:"text/csv;charset=utf-8"});
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = bzYear+"年"+bzMonth+"月_事業経費.csv";
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}>CSV出力</button>
+                </div>
+                {[...bzMRecs].sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date))).map(r=>(
+                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:600}}>{r.payee||"—"}</div>
+                      <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
+                        <span style={{fontSize:11,color:"#aaa"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
+                        <span style={{fontSize:11,color:"#999",background:"#f0f0ec",borderRadius:4,padding:"1px 6px"}}>{r.bizCategory||r.category}</span>
+                        {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,fontWeight:700,flexShrink:0,color:"#3aaa82"}}>{fmtYen(r.amount)}</span>
+                    <button style={{background:"none",border:"1px solid #ddd",borderRadius:6,color:"#888",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
+                    <button style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
+        {/* ══ Card ══ */}
+        {tab==="card" && (
+          <div style={S.card}>
+            <h2 style={S.cardTitle}>Card</h2>
+            <p style={{fontSize:14,color:"#666",marginBottom:20,textAlign:"center"}}>カード明細を確認して支出を記録しましょう</p>
+            <a
+              href="https://global.americanexpress.com/activity/recent?account_key=207669CFAE5C0CEF5271D847EDECCCD9"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{display:"block",padding:"16px",background:"#1a6cb5",color:"#fff",borderRadius:12,textAlign:"center",fontSize:15,fontWeight:700,textDecoration:"none",marginBottom:12}}>
+              American Express 明細を見る →
+            </a>
+            <p style={{fontSize:12,color:"#aaa",textAlign:"center"}}>明細を確認後、入力タブから支出を記録してください</p>
+          </div>
+        )}
+
 
         {/* ══ 固定費 ══ */}
         {tab==="fixed" && (
@@ -833,7 +896,7 @@ export default function App() {
 
       </main>
 
-      {tab==="input" && <button style={S.fab} onClick={()=>setTab("fixed")}>固定費</button>}
+      {tab!=="input" && <button style={S.fab} onClick={()=>setTab("input")}>＋ 入力</button>}
 
       {editCat    && <TagEditor title="カテゴリーの編集" items={cats}    onSave={l=>{setCats(l);saveSetting("categories",l);}}     onClose={()=>setEditCat(false)} />}
       {editBizCat && <TagEditor title="事業カテゴリーの編集" items={bizCats} onSave={l=>{setBizCats(l);saveSetting("bizCategories",l);}} onClose={()=>setEditBizCat(false)} />}
