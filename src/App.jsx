@@ -616,10 +616,10 @@ export default function App() {
               <div>
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"60vh",borderRadius:10,border:"1px solid #eeeee9"}}>
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                    <thead>
+                    <thead style={{position:"sticky",top:0,zIndex:5}}>
                       <tr>
                         <th style={{...S.th,...S.thFix}}>日付</th>
-                        <th style={{...S.th,background:"#f0f0ec",color:"#333",position:"sticky",left:72,zIndex:3,boxShadow:"2px 0 4px rgba(0,0,0,.04)",minWidth:80}}>合計</th>
+                        <th style={{...S.th,background:"#f0f0ec",color:"#333",position:"sticky",left:100,zIndex:3,boxShadow:"2px 0 4px rgba(0,0,0,.04)",minWidth:80}}>合計</th>
                         {usedCats.map(c=>(
                           <th key={c} style={S.th}>
                             <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:catColors[c],marginRight:4,verticalAlign:"middle"}} />{c}
@@ -627,9 +627,9 @@ export default function App() {
                         ))}
                       </tr>
                       <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
-                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0",position:"sticky",top:37,zIndex:4}}>月計</td>
-                        <td style={{...S.td,fontWeight:700,background:"#f0f0ec",position:"sticky",left:72,top:37,zIndex:4,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(mTotal)}</td>
-                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700,position:"sticky",top:37,background:"#f5f5f0",zIndex:2}}>{fmtYen(catTotals[c])}</td>)}
+                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>月計</td>
+                        <td style={{...S.td,fontWeight:700,background:"#f0f0ec",position:"sticky",left:100,zIndex:3,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(mTotal)}</td>
+                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700,background:"#f5f5f0"}}>{fmtYen(catTotals[c])}</td>)}
                       </tr>
                     </thead>
                     <tbody>
@@ -648,7 +648,7 @@ export default function App() {
                                 <span style={{fontSize:11,color:dateColor,opacity:.7,marginLeft:3}}>{dow}</span>
                                 {isToday&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>today</span>}
                               </td>
-                              <td style={{...S.td,fontWeight:600,background:"#fafaf8",position:"sticky",left:72,zIndex:1,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(dayTotal)}</td>
+                              <td style={{...S.td,fontWeight:600,background:"#fafaf8",position:"sticky",left:100,zIndex:1,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(dayTotal)}</td>
                               {usedCats.map(c=>{
                                 const amt=byDate[date][c];
                                 const ck=date+":"+c;
@@ -870,7 +870,7 @@ const S = {
   primaryBtn:{ marginTop:10, width:"100%", padding:"14px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
   secTitle:  { fontSize:11, fontWeight:700, color:"#aaa", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
   th:        { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3, boxShadow:"0 1px 0 #e8e8e3" },
-  thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:72, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
+  thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:100, width:100, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
   td:        { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid #f2f2ee", fontSize:13, color:"#333", whiteSpace:"nowrap" },
   fab:       { position:"fixed", bottom:28, right:20, padding:"12px 20px", background:"#4f7cac", color:"#fff", border:"none", borderRadius:28, fontSize:14, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 14px rgba(79,124,172,.4)", zIndex:150, fontFamily:"inherit" },
   toast:     { position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:"#1a1a1a", color:"#fff", padding:"10px 22px", borderRadius:30, fontSize:13, zIndex:300, whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(0,0,0,.2)" },
