@@ -633,7 +633,7 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.keys(byDate).sort().map((date,di)=>{
+                      {Object.keys(byDate).sort().reverse().map((date,di)=>{
                         const dayTotal=Object.values(byDate[date]).reduce((a,b)=>a+b,0);
                         const dow=DAYS[new Date(date).getDay()];
                         const isSun=new Date(date).getDay()===0;
@@ -869,7 +869,7 @@ const S = {
   chip:      { padding:"6px 13px", border:"1px solid #ddd", borderRadius:20, fontSize:13, background:"#fafaf8", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
   primaryBtn:{ marginTop:10, width:"100%", padding:"14px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
   secTitle:  { fontSize:11, fontWeight:700, color:"#aaa", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
-  th:        { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3 },
+  th:        { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3, boxShadow:"0 1px 0 #e8e8e3" },
   thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:72, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
   td:        { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid #f2f2ee", fontSize:13, color:"#333", whiteSpace:"nowrap" },
   fab:       { position:"fixed", bottom:28, right:20, padding:"12px 20px", background:"#4f7cac", color:"#fff", border:"none", borderRadius:28, fontSize:14, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 14px rgba(79,124,172,.4)", zIndex:150, fontFamily:"inherit" },
