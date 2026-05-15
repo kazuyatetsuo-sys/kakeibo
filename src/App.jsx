@@ -627,9 +627,9 @@ export default function App() {
                         ))}
                       </tr>
                       <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
-                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>月計</td>
-                        <td style={{...S.td,fontWeight:700,background:"#f0f0ec",position:"sticky",left:72,zIndex:1,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(mTotal)}</td>
-                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(catTotals[c])}</td>)}
+                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0",position:"sticky",top:37,zIndex:4}}>月計</td>
+                        <td style={{...S.td,fontWeight:700,background:"#f0f0ec",position:"sticky",left:72,top:37,zIndex:4,boxShadow:"2px 0 4px rgba(0,0,0,.04)"}}>{fmtYen(mTotal)}</td>
+                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700,position:"sticky",top:37,background:"#f5f5f0",zIndex:2}}>{fmtYen(catTotals[c])}</td>)}
                       </tr>
                     </thead>
                     <tbody>
