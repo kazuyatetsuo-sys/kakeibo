@@ -955,4 +955,3 @@ const M = {
   catTab:  { padding:"4px 10px", border:"1px solid #ddd", borderRadius:16, fontSize:12, cursor:"pointer", background:"#fafaf8", fontFamily:"inherit", color:"#666" },
   catTabOn:{ background:"#1a1a1a", color:"#fff", borderColor:"#1a1a1a" },
 };
-　
