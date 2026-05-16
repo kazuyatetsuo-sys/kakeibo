@@ -499,7 +499,14 @@ export default function App() {
             <h2 style={S.cardTitle}>支出を記録</h2>
             <div>
               <label style={S.label}>日付</label>
-              <input style={{...S.inp,width:"100%",boxSizing:"border-box"}} type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} />
+              <div style={{position:"relative",width:"100%"}}>
+                <div style={{...S.inp,color:"#1a1a1a",pointerEvents:"none",boxSizing:"border-box"}}>
+                  {form.date||"日付を選択"}
+                </div>
+                <input type="date" value={form.date}
+                  onChange={e=>setForm(f=>({...f,date:e.target.value}))}
+                  style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer",zIndex:1}} />
+              </div>
             </div>
             <div>
               <label style={S.label}>金額（円）</label>
