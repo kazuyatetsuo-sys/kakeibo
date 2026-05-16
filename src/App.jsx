@@ -799,23 +799,19 @@ export default function App() {
                   <p style={S.secTitle}>月間明細（{bzMRecs.length}件）</p>
                   <button style={{padding:"6px 14px",background:"#3aaa82",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}
                     onClick={()=>{
-                      const header = "日付,カテゴリー,事業カテゴリー,支払い先,金額,メモ
-";
-                      const rows = [...bzMRecs].sort((a,b)=>normDate(a.date).localeCompare(normDate(b.date))).map(r=>[
-                        normDate(r.date),
-                        r.category||"",
-                        r.bizCategory||"",
-                        r.payee||"",
-                        r.amount,
-                        r.memo||""
-                      ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("
-");
-                      const bom = "﻿";
-                      const blob = new Blob([bom+header+rows],{type:"text/csv;charset=utf-8"});
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = bzYear+"年"+bzMonth+"月_事業経費.csv";
+                      const SEP=",";
+                      const NL="\n";
+                      const cols=["日付","カテゴリー","事業カテゴリー","支払い先","金額","メモ"];
+                      const hdr=cols.join(SEP)+NL;
+                      const rws=[...bzMRecs].sort((a,b)=>normDate(a.date).localeCompare(normDate(b.date))).map(r=>{
+                        const v=[normDate(r.date),r.category||"",r.bizCategory||"",r.payee||"",String(r.amount),r.memo||""];
+                        return v.map(x=>'"'+ x.replace(/"/g,'""')+'"').join(SEP);
+                      }).join(NL);
+                      const blob=new Blob(["\uFEFF"+hdr+rws],{type:"text/csv;charset=utf-8"});
+                      const url=URL.createObjectURL(blob);
+                      const a=document.createElement("a");
+                      a.href=url;
+                      a.download=bzYear+"年"+bzMonth+"月_事業経費.csv";
                       a.click();
                       URL.revokeObjectURL(url);
                     }}>CSV出力</button>
