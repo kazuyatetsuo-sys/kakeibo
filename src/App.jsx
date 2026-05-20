@@ -483,7 +483,18 @@ export default function App() {
         </div>
         <nav style={S.nav}>
           {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"],["card","Card"]].map(([k,l])=>(
-            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>{ setTab(k); if(k==='monthly'){setVMonth(new Date().getMonth()+1);setVYear(new Date().getFullYear());} }}>{l}</button>
+            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>{ setTab(k); if(k==='monthly'){
+              const now=new Date();
+              const d=now.getDate();
+              const m=now.getMonth()+1;
+              const y=now.getFullYear();
+              // 19日以降は翌月サイクル
+              if(d>=19){
+                if(m===12){setVMonth(1);setVYear(y+1);}
+                else{setVMonth(m+1);setVYear(y);}
+              } else {
+                setVMonth(m);setVYear(y);
+              }} }}>{l}</button>
           ))}
         </nav>
         <button style={S.refreshBtn} onClick={fetchAll} title="更新">↺</button>
