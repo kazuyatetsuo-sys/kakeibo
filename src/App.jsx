@@ -151,7 +151,7 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
         <h3 style={M.mTitle}>記録を編集</h3>
         <div style={{marginBottom:8}}>
           <label style={M.label}>日付</label>
-          <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} />
+          <div style={{position:"relative",width:"100%"}}><div style={{...M.inp,boxSizing:"border-box",color:"#1a1a1a",pointerEvents:"none"}}>{r.date||"日付を選択"}</div><input type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer",zIndex:1}} /></div>
         </div>
         <div style={{marginBottom:4}}>
           <label style={M.label}>金額（円）</label>
