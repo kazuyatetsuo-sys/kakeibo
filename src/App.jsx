@@ -570,22 +570,21 @@ export default function App() {
               <div style={{marginTop:24}}>
                 <p style={S.secTitle}>最近の記録</p>
                 {[...records].reverse().slice(0,10).map(r=>(
-                  <div key={r.id} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
-                    <span style={{width:8,height:8,borderRadius:"50%",background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"#aaa",marginTop:5,flexShrink:0,display:"inline-block"}} />
-                    <div style={{flex:1,fontSize:14}}>
-                      <span style={{fontWeight:600}}>{r.category}</span>
-                      {r.isBiz&&r.bizCategory&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600,marginLeft:4}}>{r.bizCategory}</span>}
-                      {r.payee&&<span style={{color:"#666"}}> · {r.payee}</span>}
-                      {r.memo&&<span style={{color:"#aaa"}}> — {r.memo}</span>}
-                      <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontSize:11,color:"#bbb"}}>{normDate(r.date)}</span>
-                        {r.isFixed&&<span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600}}>固定費</span>}
-                        {r.isBiz&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600}}>事業経費</span>}
+                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
+                    <span style={{width:9,height:9,borderRadius:"50%",background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"#ccc",flexShrink:0,display:"inline-block"}} />
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:15,fontWeight:600,color:"#1a1a1a",marginBottom:3}}>{r.payee||"—"}</div>
+                      <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+                        <span style={{fontSize:11,color:"#333"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
+                        <span style={{fontSize:11,color:"#999",background:"#f0f0ec",borderRadius:4,padding:"1px 6px"}}>{r.category}</span>
+                        {r.isFixed&&<span style={{fontSize:10,background:"#f0f0ec",color:"#999",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
+                        {r.isBiz&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
+                        {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
                       </div>
                     </div>
-                    <span style={{fontSize:15,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
-                    <button style={{background:"none",border:"1px solid #ddd",borderRadius:6,color:"#888",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
-                    <button style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
+                    <span style={{fontSize:14,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
+                    <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#aaa",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
+                    <button style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
                   </div>
                 ))}
               </div>
@@ -918,6 +917,14 @@ export default function App() {
   );
 }
 
+
+// ── Dark Mode Styles ──────────────────────────────────────────────────────────
+const DK = {
+  app:    { background:"#0f0f0f", color:"#f0f0f0" },
+  header: { background:"#1a1a1a", borderBottomColor:"#333" },
+  main:   { background:"#0f0f0f" },
+  card:   { background:"#1e1e1e", boxShadow:"0 1px 4px rgba(0,0,0,.3)" },
+};
 // ── Styles ────────────────────────────────────────────────────────────────────
 const S = {
   app:       { fontFamily:"'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif", background:"#f7f7f5", minHeight:"100vh", color:"#1a1a1a" },
