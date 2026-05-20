@@ -149,15 +149,13 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
     <div style={M.overlay}>
       <div style={{...M.modal,maxHeight:"90vh",overflowY:"auto"}}>
         <h3 style={M.mTitle}>記録を編集</h3>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:4}}>
-          <div>
-            <label style={M.label}>日付</label>
-            <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} />
-          </div>
-          <div>
-            <label style={M.label}>金額</label>
-            <input style={{...M.inp,textAlign:"right",fontWeight:700}} type="number" value={r.amount} onChange={e=>setR(v=>({...v,amount:e.target.value}))} />
-          </div>
+        <div style={{marginBottom:8}}>
+          <label style={M.label}>日付</label>
+          <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} />
+        </div>
+        <div style={{marginBottom:4}}>
+          <label style={M.label}>金額（円）</label>
+          <input style={{...M.inp,width:"100%",boxSizing:"border-box",textAlign:"right",fontWeight:700,fontSize:18}} type="number" value={r.amount} onChange={e=>setR(v=>({...v,amount:e.target.value}))} />
         </div>
         <label style={M.label}>カテゴリー</label>
         <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
@@ -485,7 +483,7 @@ export default function App() {
         </div>
         <nav style={S.nav}>
           {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"],["card","Card"]].map(([k,l])=>(
-            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>setTab(k)}>{l}</button>
+            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>{ setTab(k); if(k==='monthly'){setVMonth(new Date().getMonth()+1);setVYear(new Date().getFullYear());} }}>{l}</button>
           ))}
         </nav>
         <button style={S.refreshBtn} onClick={fetchAll} title="更新">↺</button>
