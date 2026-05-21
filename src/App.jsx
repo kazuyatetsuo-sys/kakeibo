@@ -96,42 +96,89 @@ function CatPayeeEditor({ cats, payees, onSave, onClose }) {
 }
 
 // ── FixedEditor ───────────────────────────────────────────────────────────────
-function FixedEditor({ fixed, cats, catColors, onSave, onClose }) {
+function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors, bizPayees, onSave, onClose }) {
   const [list, setList] = useState(fixed.map(f=>({...f})));
-  const [f, setF] = useState({name:"",amount:"",category:"",payee:"",day:1});
+  const [f, setF] = useState({name:"",amount:"",category:"",bizCategory:"",payee:"",memo:"",day:1,isBiz:false});
+  const payeesToShow = f.category ? (catPayees[f.category]||[]) : [];
+  const bizPayeesToShow = f.bizCategory ? (bizPayees[f.bizCategory]||[]) : [];
   const add = () => {
     if(!f.name||!f.amount||!f.category) return;
     setList([...list,{id:Date.now(),...f,amount:Number(f.amount)}]);
-    setF({name:"",amount:"",category:"",payee:"",day:1});
+    setF({name:"",amount:"",category:"",bizCategory:"",payee:"",memo:"",day:1,isBiz:false});
   };
   return (
     <div style={M.overlay}>
-      <div style={{...M.modal,maxWidth:520}}>
+      <div style={{...M.modal,maxWidth:520,maxHeight:"90vh",overflowY:"auto"}}>
         <h3 style={M.mTitle}>固定費の管理</h3>
         <div style={{marginBottom:14}}>
           {list.map((item,i) => (
             <div key={item.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f0f0ec"}}>
               <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"#aaa",display:"inline-block",flexShrink:0}} />
-              <span style={{flex:1,fontSize:14,fontWeight:600}}>{item.name}</span>
-              <span style={{fontSize:12,color:"#888"}}>毎月{item.day}日</span>
-              <span style={{fontSize:14,fontWeight:700,marginLeft:8}}>{fmtYen(item.amount)}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:600}}>{item.name}</div>
+                <div style={{fontSize:11,color:"#aaa"}}>{item.category}{item.payee?" · "+item.payee:""} · 毎月{item.day}日</div>
+              </div>
+              <span style={{fontSize:14,fontWeight:700}}>{fmtYen(item.amount)}</span>
               <button style={M.xBtn} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
             </div>
           ))}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-          <input style={M.inp} placeholder="名称" value={f.name} onChange={e=>setF(v=>({...v,name:e.target.value}))} />
-          <input style={M.inp} type="number" placeholder="金額" value={f.amount} onChange={e=>setF(v=>({...v,amount:e.target.value}))} />
-          <select style={M.inp} value={f.category} onChange={e=>setF(v=>({...v,category:e.target.value}))}>
-            <option value="">カテゴリー</option>
-            {cats.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select style={M.inp} value={f.day} onChange={e=>setF(v=>({...v,day:Number(e.target.value)}))}>
-            {Array.from({length:28},(_,i)=>i+1).map(d => <option key={d} value={d}>{d}日</option>)}
-          </select>
+        <div style={{borderTop:"1px solid #eee",paddingTop:12}}>
+          <p style={{fontSize:11,fontWeight:600,color:"#aaa",letterSpacing:1,marginBottom:10}}>新しい固定費を追加</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+            <input style={M.inp} placeholder="名称（例：家賃）" value={f.name} onChange={e=>setF(v=>({...v,name:e.target.value}))} />
+            <input style={M.inp} type="number" placeholder="金額" value={f.amount} onChange={e=>setF(v=>({...v,amount:e.target.value}))} />
+            <select style={M.inp} value={f.day} onChange={e=>setF(v=>({...v,day:Number(e.target.value)}))}>
+              {Array.from({length:28},(_,i)=>i+1).map(d => <option key={d} value={d}>{d}日</option>)}
+            </select>
+          </div>
+          <label style={{...M.label,marginTop:0}}>カテゴリー</label>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+            {cats.map(c=>(
+              <button key={c} style={{...M.chip,...(f.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}}
+                onClick={()=>setF(v=>({...v,category:c,payee:""}))}>
+                {c}
+              </button>
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"8px 0"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer"}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
+              <span style={{fontSize:13,color:"#555"}}>事業経費</span>
+              <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0,transition:"background .2s"}}>
+                <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+              </div>
+            </div>
+          </div>
+          {f.isBiz && (
+            <div style={{background:"#edfaf5",borderRadius:10,padding:10,border:"1px solid #b2e0d0",marginBottom:8}}>
+              <label style={{...M.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:bizPayeesToShow.length>0?8:0}}>
+                {bizCats.map(c=>(
+                  <button key={c} style={{...M.chip,...(f.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}}
+                    onClick={()=>setF(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {payeesToShow.length>0 && (
+            <div>
+              <label style={{...M.label,marginTop:0}}>支払い先</label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+                {payeesToShow.map(p=>(
+                  <button key={p} style={{...M.chip,...(f.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}}
+                    onClick={()=>setF(v=>({...v,payee:p}))}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="支払い先を直接入力" value={f.payee} onChange={e=>setF(v=>({...v,payee:e.target.value}))} />
+          <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="メモ（任意）" value={f.memo||""} onChange={e=>setF(v=>({...v,memo:e.target.value}))} />
+          <button style={{...M.addBtn,width:"100%",padding:"10px"}} onClick={add}>追加</button>
         </div>
-        <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="支払い先（任意）" value={f.payee} onChange={e=>setF(v=>({...v,payee:e.target.value}))} />
-        <button style={{...M.addBtn,width:"100%",padding:"10px"}} onClick={add}>追加</button>
         <div style={{...M.btns,marginTop:14}}>
           <button style={M.cancel} onClick={onClose}>キャンセル</button>
           <button style={M.save} onClick={()=>{onSave(list);onClose();}}>保存</button>
@@ -402,16 +449,9 @@ export default function App() {
   const addRecord = () => {
     const cat = form.isBiz ? (form.bizCategory||form.category) : form.category;
     if(!form.amount||!cat||!form.date){ showToast("日付・金額・カテゴリーは必須です"); return; }
-    const rec = {id:Date.now(),date:normDate(form.date),amount:Number(form.amount),category:form.category,bizCategory:form.isBiz?form.bizCategory:"",payee:form.payee||"",memo:form.memo||"",isFixed:form.isFixed,isBiz:form.isBiz};
+    const rec = {id:Date.now(),date:normDate(form.date),amount:Number(form.amount),category:form.category,bizCategory:form.isBiz?form.bizCategory:"",payee:form.payee||"",memo:form.memo||"",isFixed:false,isBiz:form.isBiz};
     setRecords(p=>[...p,rec]);
-    if(form.isFixed){
-      const name=form.memo||cat;
-      if(!fixed.some(f=>f.name===name)){
-        const nf={id:Date.now()+1,name,amount:Number(form.amount),category:form.category,bizCategory:rec.bizCategory,payee:form.payee||"",day:Number(normDate(form.date).split("-")[2])};
-        const upd=[...fixed,nf]; setFixed(upd); saveSetting("fixedCosts",upd);
-        showToast("「"+name+"」を固定費候補に追加しました ✓");
-      } else { showToast("記録しました ✓"); }
-    } else { showToast("記録しました ✓"); }
+    showToast("記録しました ✓");
     setForm(f=>({...f,amount:"",memo:"",payee:"",isFixed:false,isBiz:false,bizCategory:""}));
     sync({action:"addRecord",record:rec});
   };
@@ -446,10 +486,25 @@ export default function App() {
   const catTotals = {}; usedCats.forEach(c=>{catTotals[c]=mRecs.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
 
   // 年間データ
-  const yRecs = records.filter(r=>normDate(r.date).startsWith(String(vYear)));
+  // 年間：各月を19日〜翌月18日のサイクルで集計
+  // 表示月mのサイクル = 前月19日〜当月18日
+  const cycleStart = (y,m) => { const pm=m===1?12:m-1; const py=m===1?y-1:y; return py+"-"+pad(pm)+"-19"; };
+  const cycleEnd   = (y,m) => y+"-"+pad(m)+"-18";
   const byMonth = {}; for(let m=1;m<=12;m++) byMonth[m]={};
-  yRecs.forEach(r=>{ const m=Number(normDate(r.date).split("-")[1]); byMonth[m][r.category]=(byMonth[m][r.category]||0)+Number(r.amount); });
-  const yUsedCats = cats.filter(c=>yRecs.some(r=>r.category===c));
+  records.forEach(r=>{
+    const d=normDate(r.date);
+    for(let m=1;m<=12;m++){
+      if(d>=cycleStart(vYear,m)&&d<=cycleEnd(vYear,m)){
+        byMonth[m][r.category]=(byMonth[m][r.category]||0)+Number(r.amount);
+        break;
+      }
+    }
+  });
+  const yRecs = records.filter(r=>{
+    const d=normDate(r.date);
+    return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12);
+  });
+  const yUsedCats = cats.filter(c=>Object.values(byMonth).some(m=>m[c]));
 
   // 事業経費データ
   const bizRecs = records.filter(r=>r.isBiz&&r.bizCategory);
@@ -557,8 +612,7 @@ export default function App() {
               </div>
             )}
 
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
-              <Toggle label="固定費" on={form.isFixed} color="#4f7cac" onChange={()=>setForm(f=>({...f,isFixed:!f.isFixed}))} />
+            <div style={{marginTop:14}}>
               <Toggle label="事業経費" on={form.isBiz} color="#3aaa82" onChange={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:""}))} />
             </div>
 
@@ -911,7 +965,7 @@ export default function App() {
       {editBizCat && <TagEditor title="事業カテゴリーの編集" items={bizCats} onSave={l=>{setBizCats(l);saveSetting("bizCategories",l);}} onClose={()=>setEditBizCat(false)} />}
       {editCatP   && <CatPayeeEditor cats={cats}    payees={catPayees} onSave={m=>{setCatPayees(m);saveSetting("catPayees",m);}}   onClose={()=>setEditCatP(false)} />}
       {editBizP   && <CatPayeeEditor cats={bizCats} payees={bizPayees} onSave={m=>{setBizPayees(m);saveSetting("bizCatPayees",m);}} onClose={()=>setEditBizP(false)} />}
-      {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
+      {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
     </div>
   );
