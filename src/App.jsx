@@ -99,6 +99,7 @@ function CatPayeeEditor({ cats, payees, onSave, onClose }) {
 function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors, bizPayees, onSave, onClose }) {
   const [list, setList] = useState(fixed.map(f=>({...f})));
   const [f, setF] = useState({name:"",amount:"",category:"",bizCategory:"",payee:"",memo:"",day:1,isBiz:false});
+  const [editIdx, setEditIdx] = useState(null);
   const payeesToShow = f.category ? (catPayees[f.category]||[]) : [];
   const bizPayeesToShow = f.bizCategory ? (bizPayees[f.bizCategory]||[]) : [];
   const add = () => {
@@ -112,14 +113,38 @@ function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors,
         <h3 style={M.mTitle}>固定費の管理</h3>
         <div style={{marginBottom:14}}>
           {list.map((item,i) => (
-            <div key={item.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f0f0ec"}}>
-              <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"#aaa",display:"inline-block",flexShrink:0}} />
-              <div style={{flex:1}}>
-                <div style={{fontSize:14,fontWeight:600}}>{item.name}</div>
-                <div style={{fontSize:11,color:"#aaa"}}>{item.category}{item.payee?" · "+item.payee:""} · 毎月{item.day}日</div>
-              </div>
-              <span style={{fontSize:14,fontWeight:700}}>{fmtYen(item.amount)}</span>
-              <button style={M.xBtn} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
+            <div key={item.id}>
+              {editIdx===i ? (
+                <div style={{padding:"10px",background:"#f7f7f4",borderRadius:10,marginBottom:6,border:"1px solid #eee"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                    <input style={M.inp} placeholder="名称" value={item.name} onChange={e=>setList(list.map((x,j)=>j===i?{...x,name:e.target.value}:x))} />
+                    <input style={M.inp} type="number" placeholder="金額" value={item.amount} onChange={e=>setList(list.map((x,j)=>j===i?{...x,amount:e.target.value}:x))} />
+                    <select style={M.inp} value={item.day} onChange={e=>setList(list.map((x,j)=>j===i?{...x,day:Number(e.target.value)}:x))}>
+                      {Array.from({length:28},(_,k)=>k+1).map(d=><option key={d} value={d}>{d}日</option>)}
+                    </select>
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+                    {cats.map(c=><button key={c} style={{...M.chip,...(item.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}} onClick={()=>setList(list.map((x,j)=>j===i?{...x,category:c,payee:""}:x))}>{c}</button>)}
+                  </div>
+                  {(catPayees[item.category]||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{(catPayees[item.category]||[]).map(p=><button key={p} style={{...M.chip,...(item.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setList(list.map((x,j)=>j===i?{...x,payee:p}:x))}>{p}</button>)}</div>}
+                  <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:6}} placeholder="支払い先" value={item.payee||""} onChange={e=>setList(list.map((x,j)=>j===i?{...x,payee:e.target.value}:x))} />
+                  <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="メモ" value={item.memo||""} onChange={e=>setList(list.map((x,j)=>j===i?{...x,memo:e.target.value}:x))} />
+                  <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+                    <button style={M.cancel} onClick={()=>setEditIdx(null)}>完了</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f0f0ec"}}>
+                  <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"#aaa",display:"inline-block",flexShrink:0}} />
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:600}}>{item.name}</div>
+                    <div style={{fontSize:11,color:"#aaa"}}>{item.category}{item.payee?" · "+item.payee:""} · 毎月{item.day}日</div>
+                  </div>
+                  <span style={{fontSize:14,fontWeight:700}}>{fmtYen(item.amount)}</span>
+                  <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#888",cursor:"pointer",fontSize:11,padding:"2px 7px"}} onClick={()=>setEditIdx(i)}>編集</button>
+                  <button style={M.xBtn} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -935,18 +960,37 @@ export default function App() {
             {fixed.length===0 ? <p style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>固定費候補がありません</p> : (
               <div>
                 <p style={{fontSize:12,color:"#aaa",marginBottom:12}}>記録したいものを選んで「記録する」を押してください</p>
-                {fixed.map(f=>{
-                  const isRec=records.some(r=>r.date.startsWith(vYear+"-"+pad(vMonth))&&r.memo===f.name&&r.isFixed);
-                  return (
-                    <FixedCandidateRow key={f.id} item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
-                      onRecord={(item,amount,date)=>{
-                        const rec={id:Date.now(),isFixed:true,isBiz:false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
-                        setRecords(p=>[...p,rec]);
-                        showToast(item.name+" を記録しました ✓");
-                        sync({action:"addRecord",record:rec});
-                      }} />
-                  );
-                })}
+                {(()=>{
+                  // カテゴリーごとにグループ化して日付順
+                  const grouped = {};
+                  [...fixed].sort((a,b)=>a.day-b.day).forEach(f=>{
+                    const cat = f.category||"その他";
+                    if(!grouped[cat]) grouped[cat]=[];
+                    grouped[cat].push(f);
+                  });
+                  // catsの順番でカテゴリーを並べる
+                  const orderedCats = cats.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!cats.includes(c)));
+                  return orderedCats.map(cat=>(
+                    <div key={cat} style={{marginBottom:16}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block"}} />
+                        <span style={{fontSize:12,fontWeight:700,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>{cat}</span>
+                      </div>
+                      {grouped[cat].map(f=>{
+                        const isRec=records.some(r=>r.date.startsWith(vYear+"-"+pad(vMonth))&&r.memo===f.name&&r.isFixed);
+                        return (
+                          <FixedCandidateRow key={f.id} item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
+                            onRecord={(item,amount,date)=>{
+                              const rec={id:Date.now(),isFixed:true,isBiz:false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
+                              setRecords(p=>[...p,rec]);
+                              showToast(item.name+" を記録しました ✓");
+                              sync({action:"addRecord",record:rec});
+                            }} />
+                        );
+                      })}
+                    </div>
+                  ));
+                })()}
               </div>
             )}
             <button style={{...S.primaryBtn,marginTop:16}} onClick={()=>setEditFixed(true)}>固定費を編集する</button>
