@@ -257,13 +257,7 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
           </div>
         )}
         <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:4}} placeholder="支払い先を直接入力" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"10px 0"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer"}} onClick={()=>setR(v=>({...v,isFixed:!v.isFixed}))}>
-            <span style={{fontSize:13,color:"#333"}}>固定費</span>
-            <div style={{width:36,height:22,borderRadius:11,background:r.isFixed?"#4f7cac":"#ddd",position:"relative",flexShrink:0}}>
-              <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:r.isFixed?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
-            </div>
-          </div>
+        <div style={{margin:"10px 0"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer"}} onClick={()=>setR(v=>({...v,isBiz:!v.isBiz,bizCategory:v.isBiz?"":v.bizCategory}))}>
             <span style={{fontSize:13,color:"#333"}}>事業経費</span>
             <div style={{width:36,height:22,borderRadius:11,background:r.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0}}>
@@ -293,7 +287,19 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
 // ── FixedCandidateRow ─────────────────────────────────────────────────────────
 function FixedCandidateRow({ item, catColors, isRecorded, viewYear, viewMonth, onRecord }) {
   const [amount, setAmount] = useState(String(item.amount));
-  const [date, setDate] = useState(viewYear+"-"+pad(viewMonth)+"-"+pad(item.day));
+  // 19日〜18日サイクルに合わせた日付
+  const initDate = () => {
+    const d = item.day;
+    // 1〜18日 → 当月、19〜31日 → 前月（サイクル開始月）
+    if(d<=18){
+      return viewYear+"-"+pad(viewMonth)+"-"+pad(d);
+    } else {
+      const pm = viewMonth===1?12:viewMonth-1;
+      const py = viewMonth===1?viewYear-1:viewYear;
+      return py+"-"+pad(pm)+"-"+pad(d);
+    }
+  };
+  const [date, setDate] = useState(initDate());
   const [open, setOpen] = useState(false);
   return (
     <div style={{border:"1px solid #eeeee9",borderRadius:12,marginBottom:8,overflow:"hidden"}}>
@@ -509,7 +515,7 @@ export default function App() {
   const applyFixed = () => {
     const pfx=vYear+"-"+pad(vMonth);
     if(records.some(r=>r.date.startsWith(pfx)&&r.isFixed)){ showToast("今月はすでに適用済みです"); return; }
-    const newR=fixed.map(f=>({id:Date.now()+Math.random(),isFixed:true,isBiz:false,date:pfx+"-"+pad(f.day),amount:f.amount,category:f.category,bizCategory:f.bizCategory||"",payee:f.payee||"",memo:f.name}));
+    const newR=fixed.map(f=>({id:Date.now()+Math.random(),isFixed:true,isBiz:f.isBiz||false,date:pfx+"-"+pad(f.day),amount:f.amount,category:f.category,bizCategory:f.bizCategory||"",payee:f.payee||"",memo:f.name}));
     setRecords(p=>[...p,...newR]);
     showToast(newR.length+"件の固定費を記録しました");
     sync({action:"addRecords",records:newR});
@@ -602,6 +608,18 @@ export default function App() {
         {tab==="input" && (
           <div style={S.card}>
             <h2 style={S.cardTitle}>支出を記録</h2>
+            {mTotal>0 && (
+              <div style={{display:"flex",gap:8,marginBottom:16}}>
+                <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                  <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
+                  <div style={{fontSize:18,fontWeight:700}}>{fmtYen(mTotal)}</div>
+                </div>
+                <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                  <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>1日平均</div>
+                  <div style={{fontSize:18,fontWeight:700}}>{fmtYen(Math.round(mTotal/Math.max(1,new Set(mRecs.map(r=>normDate(r.date))).size)))}</div>
+                </div>
+              </div>
+            )}
             <div>
               <label style={S.label}>日付</label>
               <div style={{position:"relative",width:"100%"}}>
@@ -1017,7 +1035,7 @@ export default function App() {
                         return (
                           <FixedCandidateRow key={f.id} item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
                             onRecord={(item,amount,date)=>{
-                              const rec={id:Date.now(),isFixed:true,isBiz:false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
+                              const rec={id:Date.now(),isFixed:true,isBiz:item.isBiz||false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
                               setRecords(p=>[...p,rec]);
                               showToast(item.name+" を記録しました ✓");
                               sync({action:"addRecord",record:rec});
