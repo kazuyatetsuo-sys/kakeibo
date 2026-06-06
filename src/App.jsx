@@ -608,18 +608,26 @@ export default function App() {
         {tab==="input" && (
           <div style={S.card}>
             <h2 style={S.cardTitle}>支出を記録</h2>
-            {mTotal>0 && (
-              <div style={{display:"flex",gap:8,marginBottom:16}}>
-                <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                  <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
-                  <div style={{fontSize:18,fontWeight:700}}>{fmtYen(mTotal)}</div>
+            {mTotal>0 && (()=>{
+              const todayTotal = mRecs.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
+              const dayCount = new Set(mRecs.map(r=>normDate(r.date))).size;
+              return (
+                <div style={{display:"flex",gap:8,marginBottom:16}}>
+                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
+                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
+                  </div>
+                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
+                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(mTotal)}</div>
+                  </div>
+                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>1日平均</div>
+                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(Math.round(mTotal/Math.max(1,dayCount)))}</div>
+                  </div>
                 </div>
-                <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                  <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>1日平均</div>
-                  <div style={{fontSize:18,fontWeight:700}}>{fmtYen(Math.round(mTotal/Math.max(1,new Set(mRecs.map(r=>normDate(r.date))).size)))}</div>
-                </div>
-              </div>
-            )}
+              );
+            })()}
             <div>
               <label style={S.label}>日付</label>
               <div style={{position:"relative",width:"100%"}}>
