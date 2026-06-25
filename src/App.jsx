@@ -238,7 +238,7 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
         <h3 style={M.mTitle}>記録を編集</h3>
         <div style={{marginBottom:8}}>
           <label style={M.label}>日付</label>
-          <div style={{position:"relative",width:"100%"}}><div style={{...M.inp,boxSizing:"border-box",color:"#1a1a1a",pointerEvents:"none"}}>{r.date||"日付を選択"}</div><input type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer",zIndex:1}} /></div>
+          <input type="date" value={r.date} onChange={e=>setR(v=>({...v,date:e.target.value}))} style={{...M.inp,width:"100%",boxSizing:"border-box",fontSize:16}} />
         </div>
         <div style={{marginBottom:4}}>
           <label style={M.label}>金額（円）</label>
@@ -441,8 +441,8 @@ export default function App() {
   const [editFixed, setEditFixed] = useState(false);
   const [addFixed,  setAddFixed]  = useState(false);
   const [editRec, setEditRec]   = useState(null);
-  const [vYear, setVYear]       = useState(new Date().getFullYear());
-  const [vMonth, setVMonth]     = useState(new Date().getMonth()+1);
+  const [vYear, setVYear]       = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1,y=n.getFullYear(); if(d>=19){ return m===12?y+1:y; } return y; });
+  const [vMonth, setVMonth]     = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1; if(d>=19){ return m===12?1:m+1; } return m; });
   const [bzYear, setBzYear]     = useState(new Date().getFullYear());
   const [bzMonth, setBzMonth]   = useState(new Date().getMonth()+1);
   const [expDate, setExpDate]   = useState(null);
@@ -585,12 +585,11 @@ export default function App() {
         </div>
         <nav style={S.nav}>
           {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"],["card","Card"]].map(([k,l])=>(
-            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>{ setTab(k); if(k==='monthly'){
+            <button key={k} style={{...S.navBtn,...(tab===k?S.navOn:{})}} onClick={()=>{ setTab(k); if(k==='monthly'||k==='fixed'){
               const now=new Date();
               const d=now.getDate();
               const m=now.getMonth()+1;
               const y=now.getFullYear();
-              // 19日以降は翌月サイクル
               if(d>=19){
                 if(m===12){setVMonth(1);setVYear(y+1);}
                 else{setVMonth(m+1);setVYear(y);}
@@ -630,14 +629,9 @@ export default function App() {
             })()}
             <div>
               <label style={S.label}>日付</label>
-              <div style={{position:"relative",width:"100%"}}>
-                <div style={{...S.inp,color:"#1a1a1a",pointerEvents:"none",boxSizing:"border-box"}}>
-                  {form.date||"日付を選択"}
-                </div>
-                <input type="date" value={form.date}
-                  onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                  style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer",zIndex:1}} />
-              </div>
+              <input type="date" value={form.date}
+                onChange={e=>setForm(f=>({...f,date:e.target.value}))}
+                style={{...S.inp,width:"100%",boxSizing:"border-box",fontSize:16}} />
             </div>
             <div>
               <label style={S.label}>金額（円）</label>
