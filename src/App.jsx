@@ -608,7 +608,7 @@ export default function App() {
           <div style={S.card}>
             <h2 style={S.cardTitle}>支出を記録</h2>
             {mTotal>0 && (()=>{
-              const todayTotal = mRecs.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
+              const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
               const dayCount = new Set(mRecs.map(r=>normDate(r.date))).size;
               return (
                 <div style={{display:"flex",gap:8,marginBottom:16}}>
@@ -679,7 +679,7 @@ export default function App() {
 
             <label style={S.label}>メモ</label>
             <input style={{...S.inp,width:"100%",boxSizing:"border-box"}} placeholder="任意" value={form.memo} onChange={e=>setForm(f=>({...f,memo:e.target.value}))} />
-            <button style={S.primaryBtn} onClick={addRecord}>記録する</button>
+            <button style={{...S.primaryBtn,marginBottom:"80px"}} onClick={addRecord}>記録する</button>
 
             {records.length>0 && (
               <div style={{marginTop:24}}>
