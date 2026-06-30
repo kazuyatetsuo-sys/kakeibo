@@ -275,7 +275,7 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
         )}
         <label style={M.label}>メモ</label>
         <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} placeholder="メモ" value={r.memo||""} onChange={e=>setR(v=>({...v,memo:e.target.value}))} />
-        <div style={{...M.btns,marginTop:16}}>
+        <div style={{...M.btns,marginTop:16,position:"sticky",bottom:0,background:"#fff",paddingTop:12,paddingBottom:8,marginLeft:-24,marginRight:-24,paddingLeft:24,paddingRight:24,borderTop:"1px solid #f0f0ec"}}>
           <button style={M.cancel} onClick={onClose}>キャンセル</button>
           <button style={M.save} onClick={()=>onSave({...r,amount:Number(r.amount)})}>保存</button>
         </div>
