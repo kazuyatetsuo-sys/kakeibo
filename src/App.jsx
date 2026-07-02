@@ -509,6 +509,8 @@ export default function App() {
   const [expCat, setExpCat]     = useState(null);
   const [toast, setToast]       = useState("");
   const writing = useRef(false);
+  const pressTimer = useRef(null);
+  const didLongPress = useRef(false);
 
   const catColors    = {}; cats.forEach((c,i)=>{catColors[c]=PALETTE[i%PALETTE.length];});
   const bizCatColors = {}; bizCats.forEach((c,i)=>{bizCatColors[c]=PALETTE[(i+4)%PALETTE.length];});
@@ -680,11 +682,16 @@ export default function App() {
               <div style={{display:"flex",gap:8}}>
                 {patterns.map((pat,i)=>(
                   <button key={i}
-                    onClick={()=>pat?applyPattern(pat):setEditPattern(i)}
+                    onClick={()=>{ if(didLongPress.current){didLongPress.current=false;return;} pat?applyPattern(pat):setEditPattern(i); }}
                     onContextMenu={e=>{e.preventDefault();setEditPattern(i);}}
+                    onTouchStart={()=>{ pressTimer.current=setTimeout(()=>{didLongPress.current=true;setEditPattern(i);},500); }}
+                    onTouchEnd={()=>clearTimeout(pressTimer.current)}
+                    onTouchMove={()=>clearTimeout(pressTimer.current)}
                     title={pat?(pat.label+(pat.amount?" ¥"+Number(pat.amount).toLocaleString():"")):("パターン"+(i+1)+"を登録")}
-                    style={{width:40,height:40,borderRadius:"50%",border:pat?"2px solid #4f7cac":"2px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",fontSize:pat?18:16,display:"flex",alignItems:"center",justifyContent:"center",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",padding:0,flexShrink:0}}>
-                    {pat?pat.label:"＋"}
+                    style={{width:56,height:56,borderRadius:"50%",border:pat?"2px solid #4f7cac":"2px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",padding:0,flexShrink:0,overflow:"hidden"}}>
+                    {pat
+                      ? <span style={{fontSize:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%",textAlign:"center",padding:"0 4px",boxSizing:"border-box"}}>{pat.label}</span>
+                      : <span style={{fontSize:16}}>＋</span>}
                   </button>
                 ))}
               </div>
