@@ -708,18 +708,20 @@ export default function App() {
               const weekDays = new Set(weekRecs.map(r=>normDate(r.date))).size;
               const weekAvg = weekDays>0 ? Math.round(weekTotal/weekDays) : 0;
               return (
-                <div style={{display:"flex",gap:8,marginBottom:16}}>
-                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
-                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
-                  </div>
-                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+                  <div style={{background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
                     <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
-                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(mTotal)}</div>
+                    <div style={{fontSize:22,fontWeight:700}}>{fmtYen(mTotal)}</div>
                   </div>
-                  <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週平均</div>
-                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekAvg)}</div>
+                  <div style={{display:"flex",gap:8}}>
+                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
+                      <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
+                    </div>
+                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週平均</div>
+                      <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekAvg)}</div>
+                    </div>
                   </div>
                 </div>
               );
