@@ -691,7 +691,15 @@ export default function App() {
             </div>
             {mTotal>0 && (()=>{
               const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
-              const dayCount = new Set(mRecs.map(r=>normDate(r.date))).size;
+              const now = new Date();
+              const dow = now.getDay(); // 0=Sun,1=Mon,...
+              const diffToMon = (dow===0 ? 6 : dow-1);
+              const monDate = new Date(now); monDate.setDate(now.getDate()-diffToMon);
+              const monStr = monDate.getFullYear()+"-"+pad(monDate.getMonth()+1)+"-"+pad(monDate.getDate());
+              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=today; });
+              const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
+              const weekDays = new Set(weekRecs.map(r=>normDate(r.date))).size;
+              const weekAvg = weekDays>0 ? Math.round(weekTotal/weekDays) : 0;
               return (
                 <div style={{display:"flex",gap:8,marginBottom:16}}>
                   <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
@@ -703,8 +711,8 @@ export default function App() {
                     <div style={{fontSize:18,fontWeight:700}}>{fmtYen(mTotal)}</div>
                   </div>
                   <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>1日平均</div>
-                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(Math.round(mTotal/Math.max(1,dayCount)))}</div>
+                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週平均</div>
+                    <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekAvg)}</div>
                   </div>
                 </div>
               );
