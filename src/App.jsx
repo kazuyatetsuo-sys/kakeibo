@@ -724,11 +724,11 @@ export default function App() {
                 </div>
               );
             })()}
-            <div>
+            <div style={{width:"100%",overflow:"hidden"}}>
               <label style={S.label}>日付</label>
               <input type="date" value={form.date}
                 onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                style={{...S.inp,width:"100%",boxSizing:"border-box",fontSize:16}} />
+                style={{...S.inp,width:"100%",maxWidth:"100%",boxSizing:"border-box",fontSize:16,appearance:"none",WebkitAppearance:"none"}} />
             </div>
             <div>
               <label style={S.label}>金額（円）</label>
