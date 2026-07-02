@@ -228,6 +228,64 @@ function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors,
   );
 }
 
+// ── PatternModal ──────────────────────────────────────────────────────────────
+function PatternModal({ idx, pattern, cats, catColors, catPayees, bizCats, bizCatColors, onSave, onDelete, onClose }) {
+  const empty = {label:"",amount:"",category:"",payee:"",isBiz:false,bizCategory:"",memo:""};
+  const [f, setF] = useState(pattern ? {...pattern,amount:String(pattern.amount)} : empty);
+  const payeesToShow = f.category ? (catPayees[f.category]||[]) : [];
+  const save = () => {
+    if(!f.label||!f.amount||!f.category) return;
+    onSave(idx,{...f,amount:Number(f.amount)});
+    onClose();
+  };
+  return (
+    <div style={M.overlay}>
+      <div style={{...M.modal,maxHeight:"90vh",overflowY:"auto"}}>
+        <h3 style={M.mTitle}>パターン {idx+1} を設定</h3>
+        <label style={M.label}>ボタンのラベル（絵文字など）</label>
+        <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="例: ☕ や コンビニ" value={f.label} onChange={e=>setF(v=>({...v,label:e.target.value}))} />
+        <label style={M.label}>金額（円）</label>
+        <input style={{...M.inp,width:"100%",boxSizing:"border-box",textAlign:"right",fontWeight:700,fontSize:18,marginBottom:4}} type="number" value={f.amount} onChange={e=>setF(v=>({...v,amount:e.target.value}))} />
+        <label style={M.label}>カテゴリー</label>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+          {cats.map(c=><button key={c} style={{...M.chip,...(f.category===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}} onClick={()=>setF(v=>({...v,category:c,payee:""}))}>{c}</button>)}
+        </div>
+        {payeesToShow.length>0 && (
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}}>
+            {payeesToShow.map(p=><button key={p} style={{...M.chip,...(f.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setF(v=>({...v,payee:p}))}>{p}</button>)}
+          </div>
+        )}
+        <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="支払い先（直接入力）" value={f.payee} onChange={e=>setF(v=>({...v,payee:e.target.value}))} />
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer",marginBottom:8}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
+          <span style={{fontSize:13,color:"#555"}}>事業経費</span>
+          <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0,transition:"background .2s"}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+          </div>
+        </div>
+        {f.isBiz && (
+          <div style={{background:"#edfaf5",borderRadius:10,padding:12,border:"1px solid #b2e0d0",marginBottom:8}}>
+            <label style={{...M.label,color:"#3aaa82",marginTop:0}}>事業カテゴリー</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {bizCats.map(c=><button key={c} style={{...M.chip,...(f.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}} onClick={()=>setF(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>{c}</button>)}
+            </div>
+          </div>
+        )}
+        <label style={M.label}>メモ</label>
+        <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} placeholder="メモ（任意）" value={f.memo} onChange={e=>setF(v=>({...v,memo:e.target.value}))} />
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:16}}>
+          {pattern
+            ? <button style={{padding:"8px 16px",background:"none",border:"1px solid #e07a5f",borderRadius:8,cursor:"pointer",fontSize:13,color:"#e07a5f",fontFamily:"inherit"}} onClick={()=>{onDelete(idx);onClose();}}>削除</button>
+            : <span />}
+          <div style={{display:"flex",gap:8}}>
+            <button style={M.cancel} onClick={onClose}>キャンセル</button>
+            <button style={M.save} onClick={save}>保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── EditModal ─────────────────────────────────────────────────────────────────
 function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onSave, onClose }) {
   const [r, setR] = useState({...rec});
@@ -441,6 +499,8 @@ export default function App() {
   const [editFixed, setEditFixed] = useState(false);
   const [addFixed,  setAddFixed]  = useState(false);
   const [editRec, setEditRec]   = useState(null);
+  const [patterns, setPatterns] = useState([null,null,null]);
+  const [editPattern, setEditPattern] = useState(null);
   const [vYear, setVYear]       = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1,y=n.getFullYear(); if(d>=19){ return m===12?y+1:y; } return y; });
   const [vMonth, setVMonth]     = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1; if(d>=19){ return m===12?1:m+1; } return m; });
   const [bzYear, setBzYear]     = useState(new Date().getFullYear());
@@ -470,6 +530,7 @@ export default function App() {
         if(s.bizCategories) setBizCats(s.bizCategories);
         if(s.bizCatPayees)  setBizPayees(s.bizCatPayees);
         if(s.fixedCosts)    setFixed(s.fixedCosts);
+        if(s.patterns)      setPatterns(s.patterns);
       }
     } catch(e) { console.warn(e); }
     setSyncing(false);
@@ -492,6 +553,14 @@ export default function App() {
   };
 
   const saveSetting = (key,val) => { if(GAS_URL) sync({action:"saveAllSettings",settings:{[key]:val}}); };
+
+  const applyPattern = (pat) => {
+    if(!pat) return;
+    const rec = {id:Date.now(),date:todayStr(),amount:Number(pat.amount),category:pat.category,bizCategory:pat.isBiz?(pat.bizCategory||""):"",payee:pat.payee||"",memo:pat.memo||"",isFixed:false,isBiz:pat.isBiz||false};
+    setRecords(p=>[...p,rec]);
+    showToast((pat.label||pat.payee||pat.category)+" を記録しました ✓");
+    sync({action:"addRecord",record:rec});
+  };
 
   const addRecord = () => {
     const cat = form.isBiz ? (form.bizCategory||form.category) : form.category;
@@ -606,7 +675,20 @@ export default function App() {
         {/* ══ 入力 ══ */}
         {tab==="input" && (
           <div style={S.card}>
-            <h2 style={S.cardTitle}>支出を記録</h2>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+              <h2 style={{...S.cardTitle,marginBottom:0}}>支出を記録</h2>
+              <div style={{display:"flex",gap:8}}>
+                {patterns.map((pat,i)=>(
+                  <button key={i}
+                    onClick={()=>pat?applyPattern(pat):setEditPattern(i)}
+                    onContextMenu={e=>{e.preventDefault();setEditPattern(i);}}
+                    title={pat?(pat.label+(pat.amount?" ¥"+Number(pat.amount).toLocaleString():"")):("パターン"+(i+1)+"を登録")}
+                    style={{width:40,height:40,borderRadius:"50%",border:pat?"2px solid #4f7cac":"2px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",fontSize:pat?18:16,display:"flex",alignItems:"center",justifyContent:"center",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",padding:0,flexShrink:0}}>
+                    {pat?pat.label:"＋"}
+                  </button>
+                ))}
+              </div>
+            </div>
             {mTotal>0 && (()=>{
               const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
               const dayCount = new Set(mRecs.map(r=>normDate(r.date))).size;
@@ -1071,6 +1153,10 @@ export default function App() {
       {addFixed   && <AddFixedModal cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} onAdd={item=>{const upd=[...fixed,item];setFixed(upd);saveSetting("fixedCosts",upd);showToast("固定費を追加しました ✓");}} onClose={()=>setAddFixed(false)} />}
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
+      {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
+        onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
+        onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
+        onClose={()=>setEditPattern(null)} />}
     </div>
   );
 }
