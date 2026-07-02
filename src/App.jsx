@@ -827,6 +827,22 @@ export default function App() {
                   })}
                 </div>
               )}
+              {mTotal>0 && (()=>{
+                const sorted = usedCats.slice().sort((a,b)=>catTotals[b]-catTotals[a]);
+                const rows = [];
+                for(let i=0;i<sorted.length;i+=2) rows.push([sorted[i],sorted[i+1]]);
+                return (
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px",marginTop:10}}>
+                    {sorted.map(c=>(
+                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c],flexShrink:0,display:"inline-block"}} />
+                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               {mTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
             </div>
 
