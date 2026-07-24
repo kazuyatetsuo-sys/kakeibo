@@ -545,6 +545,18 @@ export default function App() {
     return ()=>clearInterval(t);
   },[]);
 
+  useEffect(()=>{
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (tab === "input" && editRec === null) {
+          addRecord();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [tab, form, records, fixed, editRec]);
+
   const sync = async body => {
     if(!GAS_URL) return;
     writing.current = true;
