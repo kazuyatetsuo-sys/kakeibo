@@ -642,35 +642,36 @@ export default function App() {
   const bzMTotal = bzMRecs.reduce((s,r)=>s+Number(r.amount),0);
   const bzUsed   = bizCats.filter(c=>bzMRecs.some(r=>(r.bizCategory||r.category)===c));
   const bzTotals = {}; bzUsed.forEach(c=>{bzTotals[c]=bzMRecs.filter(r=>(r.bizCategory||r.category)===c).reduce((s,r)=>s+Number(r.amount),0);});
-  const handleCSVDownload = () => {
-    const nl = "\n";
-    const sep = ",";
-    const cols = ["日付","カテゴリー","事業カテゴリー","支払い先","金額","メモ"];
-    const header = cols.join(sep) + nl;
-    const rows = [...bzMRecs]
-      .sort((a,b) => normDate(a.date).localeCompare(normDate(b.date)))
-      .map(r => {
-        const vals = [
-          normDate(r.date),
-          r.category || "",
-          r.bizCategory || "",
-          r.payee || "",
-          String(r.amount),
-          r.memo || ""
-        ];
-        return vals.map(v => '"' + v.replace(/"/g, '""') + '"').join(sep);
-      })
-      .join(nl);
-    const bom = "﻿";
-    const blob = new Blob([bom + header + rows], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = bzYear + "年" + bzMonth + "月_事業経費.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const downloadCSV = () => {
+    try {
+      const rows = [
+        ["日付","カテゴリー","事業カテゴリー","支払い先","金額","メモ"],
+        ...[...bzMRecs]
+          .sort((a,b)=>normDate(a.date).localeCompare(normDate(b.date)))
+          .map(r=>[
+            normDate(r.date),
+            r.category||"",
+            r.bizCategory||"",
+            r.payee||"",
+            String(r.amount),
+            r.memo||""
+          ])
+      ];
+      const csvContent = "﻿" + rows.map(row=>
+        row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")
+      ).join("\n");
+      const blob = new Blob([csvContent],{type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = bzYear+"年"+bzMonth+"月_事業経費.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert("CSV出力に失敗しました: "+e.message);
+    }
   };
   const bzYRecs  = bizRecs.filter(r=>normDate(r.date).startsWith(String(bzYear)));
   const bzByM    = {}; for(let m=1;m<=12;m++) bzByM[m]={};
@@ -1085,7 +1086,7 @@ export default function App() {
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <p style={S.secTitle}>月間明細（{bzMRecs.length}件）</p>
                   <button style={{padding:"6px 14px",background:"#3aaa82",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}
-                    onClick={handleCSVDownload}>CSV出力</button>
+                    onClick={downloadCSV}>CSV出力</button>
                 </div>
                 {[...bzMRecs].sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date))).map(r=>(
                   <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
@@ -1158,14 +1159,13 @@ export default function App() {
               <div>
                 <p style={{fontSize:12,color:"#aaa",marginBottom:12}}>記録したいものを選んで「記録する」を押してください</p>
                 {(()=>{
-                  // カテゴリーごとにグループ化して日付順
                   const grouped = {};
-                  [...fixed].sort((a,b)=>a.day-b.day).forEach(f=>{
+                  fixed.forEach(f=>{
                     const cat = f.category||"その他";
                     if(!grouped[cat]) grouped[cat]=[];
                     grouped[cat].push(f);
                   });
-                  // catsの順番でカテゴリーを並べる
+                  Object.keys(grouped).forEach(c=>grouped[c].sort((a,b)=>a.day-b.day));
                   const orderedCats = cats.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!cats.includes(c)));
                   return orderedCats.map(cat=>(
                     <div key={cat} style={{marginBottom:16}}>
