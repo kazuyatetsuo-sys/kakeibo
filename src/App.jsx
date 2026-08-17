@@ -499,7 +499,7 @@ export default function App() {
   const [editFixed, setEditFixed] = useState(false);
   const [addFixed,  setAddFixed]  = useState(false);
   const [editRec, setEditRec]   = useState(null);
-  const [patterns, setPatterns] = useState([null,null,null]);
+  const [patterns, setPatterns] = useState(Array(8).fill(null));
   const [editPattern, setEditPattern] = useState(null);
   const [vYear, setVYear]       = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1,y=n.getFullYear(); if(d>=19){ return m===12?y+1:y; } return y; });
   const [vMonth, setVMonth]     = useState(()=>{ const n=new Date(),d=n.getDate(),m=n.getMonth()+1; if(d>=19){ return m===12?1:m+1; } return m; });
@@ -532,7 +532,7 @@ export default function App() {
         if(s.bizCategories) setBizCats(s.bizCategories);
         if(s.bizCatPayees)  setBizPayees(s.bizCatPayees);
         if(s.fixedCosts)    setFixed(s.fixedCosts);
-        if(s.patterns)      setPatterns(s.patterns);
+        if(s.patterns)      setPatterns(Array.from({length:8},(_,i)=>s.patterns[i]||null));
       }
     } catch(e) { console.warn(e); }
     setSyncing(false);
@@ -568,12 +568,9 @@ export default function App() {
 
   const saveSetting = (key,val) => { if(GAS_URL) sync({action:"saveAllSettings",settings:{[key]:val}}); };
 
-  const applyPattern = (pat) => {
+  const fillPattern = (pat) => {
     if(!pat) return;
-    const rec = {id:Date.now(),date:todayStr(),amount:Number(pat.amount),category:pat.category,bizCategory:pat.isBiz?(pat.bizCategory||""):"",payee:pat.payee||"",memo:pat.memo||"",isFixed:false,isBiz:pat.isBiz||false};
-    setRecords(p=>[...p,rec]);
-    showToast((pat.label||pat.payee||pat.category)+" を記録しました ✓");
-    sync({action:"addRecord",record:rec});
+    setForm(f=>({...f,amount:String(pat.amount),category:pat.category,payee:pat.payee||"",memo:pat.memo||"",isBiz:pat.isBiz||false,bizCategory:pat.isBiz?(pat.bizCategory||""):""}));
   };
 
   const addRecord = () => {
@@ -720,24 +717,19 @@ export default function App() {
         {/* ══ 入力 ══ */}
         {tab==="input" && (
           <div style={S.card}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-              <h2 style={{...S.cardTitle,marginBottom:0}}>支出を記録</h2>
-              <div style={{display:"flex",gap:8}}>
-                {patterns.map((pat,i)=>(
-                  <button key={i}
-                    onClick={()=>{ if(didLongPress.current){didLongPress.current=false;return;} pat?applyPattern(pat):setEditPattern(i); }}
-                    onContextMenu={e=>{e.preventDefault();setEditPattern(i);}}
-                    onTouchStart={()=>{ pressTimer.current=setTimeout(()=>{didLongPress.current=true;setEditPattern(i);},500); }}
-                    onTouchEnd={()=>clearTimeout(pressTimer.current)}
-                    onTouchMove={()=>clearTimeout(pressTimer.current)}
-                    title={pat?(pat.label+(pat.amount?" ¥"+Number(pat.amount).toLocaleString():"")):("パターン"+(i+1)+"を登録")}
-                    style={{width:56,height:56,borderRadius:"50%",border:pat?"2px solid #4f7cac":"2px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",padding:0,flexShrink:0,overflow:"hidden"}}>
-                    {pat
-                      ? <span style={{fontSize:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%",textAlign:"center",padding:"0 4px",boxSizing:"border-box"}}>{pat.label}</span>
-                      : <span style={{fontSize:16}}>＋</span>}
-                  </button>
-                ))}
-              </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
+              {patterns.map((pat,i)=>(
+                <button key={i}
+                  onClick={()=>{ if(didLongPress.current){didLongPress.current=false;return;} pat?fillPattern(pat):setEditPattern(i); }}
+                  onContextMenu={e=>{e.preventDefault();setEditPattern(i);}}
+                  onTouchStart={()=>{ pressTimer.current=setTimeout(()=>{didLongPress.current=true;setEditPattern(i);},500); }}
+                  onTouchEnd={()=>clearTimeout(pressTimer.current)}
+                  onTouchMove={()=>clearTimeout(pressTimer.current)}
+                  title={pat?(pat.label+(pat.amount?" ¥"+Number(pat.amount).toLocaleString():"")):("パターン"+(i+1)+"を登録")}
+                  style={{borderRadius:20,padding:"6px 14px",fontSize:13,fontWeight:600,maxWidth:150,border:pat?"1.5px solid #4f7cac":"1.5px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flexShrink:0}}>
+                  {pat ? pat.label : "＋ 追加"}
+                </button>
+              ))}
             </div>
             {mTotal>0 && (()=>{
               const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
