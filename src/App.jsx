@@ -24,6 +24,7 @@ const DEFAULT_BIZ_PAYEES = {
   "Supplies":["Amazon","Staples"],
 };
 
+const cycleSort = day => day>=19 ? day : day+31;
 const pad = n => String(n).padStart(2,"0");
 const fmtYen = n => "¥" + Number(n).toLocaleString();
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
@@ -1157,7 +1158,7 @@ export default function App() {
                     if(!grouped[cat]) grouped[cat]=[];
                     grouped[cat].push(f);
                   });
-                  Object.keys(grouped).forEach(c=>grouped[c].sort((a,b)=>a.day-b.day));
+                  Object.keys(grouped).forEach(c=>grouped[c].sort((a,b)=>cycleSort(a.day)-cycleSort(b.day)));
                   const orderedCats = cats.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!cats.includes(c)));
                   return orderedCats.map(cat=>(
                     <div key={cat} style={{marginBottom:16}}>
