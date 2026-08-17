@@ -1160,11 +1160,16 @@ export default function App() {
                   });
                   Object.keys(grouped).forEach(c=>grouped[c].sort((a,b)=>cycleSort(a.day)-cycleSort(b.day)));
                   const orderedCats = cats.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!cats.includes(c)));
-                  return orderedCats.map(cat=>(
+                  return orderedCats.map(cat=>{
+                    const catTotal = grouped[cat].reduce((s,f)=>s+f.amount,0);
+                    return (
                     <div key={cat} style={{marginBottom:16}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                        <span style={{width:8,height:8,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block"}} />
-                        <span style={{fontSize:12,fontWeight:700,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>{cat}</span>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:"#f0f0ec",borderRadius:8,padding:"8px 14px",marginTop:16,marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{width:12,height:12,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block",flexShrink:0}} />
+                          <span style={{fontSize:15,fontWeight:700,color:"#333"}}>{cat}</span>
+                        </div>
+                        <span style={{fontSize:14,fontWeight:700,color:"#333"}}>{fmtYen(catTotal)}</span>
                       </div>
                       {grouped[cat].map((f,fi)=>{
                         const isRec=records.some(r=>r.date.startsWith(vYear+"-"+pad(vMonth))&&r.memo===f.name&&r.isFixed);
@@ -1172,20 +1177,23 @@ export default function App() {
                         return (
                           <Fragment key={f.id}>
                             {showDayHeader && (
-                              <div style={{fontSize:11,color:"#aaa",fontWeight:600,borderBottom:"1px solid #f0f0ec",margin:"8px 0 4px"}}>{f.day}日</div>
+                              <div style={{fontSize:12,fontWeight:600,color:"#888",paddingLeft:14,marginTop:8,marginBottom:4}}>毎月{f.day}日</div>
                             )}
-                            <FixedCandidateRow item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
-                              onRecord={(item,amount,date)=>{
-                                const rec={id:Date.now(),isFixed:true,isBiz:item.isBiz||false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
-                                setRecords(p=>[...p,rec]);
-                                showToast(item.name+" を記録しました ✓");
-                                sync({action:"addRecord",record:rec});
-                              }} />
+                            <div style={{paddingLeft:24}}>
+                              <FixedCandidateRow item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
+                                onRecord={(item,amount,date)=>{
+                                  const rec={id:Date.now(),isFixed:true,isBiz:item.isBiz||false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
+                                  setRecords(p=>[...p,rec]);
+                                  showToast(item.name+" を記録しました ✓");
+                                  sync({action:"addRecord",record:rec});
+                                }} />
+                            </div>
                           </Fragment>
                         );
                       })}
                     </div>
-                  ));
+                    );
+                  });
                 })()}
               </div>
             )}
