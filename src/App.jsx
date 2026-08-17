@@ -1166,16 +1166,22 @@ export default function App() {
                         <span style={{width:8,height:8,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block"}} />
                         <span style={{fontSize:12,fontWeight:700,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>{cat}</span>
                       </div>
-                      {grouped[cat].map(f=>{
+                      {grouped[cat].map((f,fi)=>{
                         const isRec=records.some(r=>r.date.startsWith(vYear+"-"+pad(vMonth))&&r.memo===f.name&&r.isFixed);
+                        const showDayHeader = fi===0 || grouped[cat][fi-1].day!==f.day;
                         return (
-                          <FixedCandidateRow key={f.id} item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
-                            onRecord={(item,amount,date)=>{
-                              const rec={id:Date.now(),isFixed:true,isBiz:item.isBiz||false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
-                              setRecords(p=>[...p,rec]);
-                              showToast(item.name+" を記録しました ✓");
-                              sync({action:"addRecord",record:rec});
-                            }} />
+                          <Fragment key={f.id}>
+                            {showDayHeader && (
+                              <div style={{fontSize:11,color:"#aaa",fontWeight:600,borderBottom:"1px solid #f0f0ec",margin:"8px 0 4px"}}>{f.day}日</div>
+                            )}
+                            <FixedCandidateRow item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
+                              onRecord={(item,amount,date)=>{
+                                const rec={id:Date.now(),isFixed:true,isBiz:item.isBiz||false,date,amount:Number(amount),category:item.category,bizCategory:item.bizCategory||"",payee:item.payee||"",memo:item.name};
+                                setRecords(p=>[...p,rec]);
+                                showToast(item.name+" を記録しました ✓");
+                                sync({action:"addRecord",record:rec});
+                              }} />
+                          </Fragment>
                         );
                       })}
                     </div>
