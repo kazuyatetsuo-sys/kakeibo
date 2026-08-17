@@ -508,6 +508,7 @@ export default function App() {
   const [bzMonth, setBzMonth]   = useState(new Date().getMonth()+1);
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
+  const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
   const writing = useRef(false);
   const pressTimer = useRef(null);
@@ -1162,16 +1163,21 @@ export default function App() {
                   const orderedCats = cats.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!cats.includes(c)));
                   return orderedCats.map(cat=>{
                     const catTotal = grouped[cat].reduce((s,f)=>s+f.amount,0);
+                    const isCollapsed = collapsedCats.has(cat);
                     return (
                     <div key={cat} style={{marginBottom:16}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:"#f0f0ec",borderRadius:8,padding:"8px 14px",marginTop:16,marginBottom:4}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:"#f0f0ec",borderRadius:8,padding:"8px 14px",marginTop:16,marginBottom:4,cursor:"pointer"}}
+                        onClick={()=>setCollapsedCats(prev=>{ const next=new Set(prev); if(next.has(cat)) next.delete(cat); else next.add(cat); return next; })}>
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                           <span style={{width:12,height:12,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block",flexShrink:0}} />
                           <span style={{fontSize:15,fontWeight:700,color:"#333"}}>{cat}</span>
                         </div>
-                        <span style={{fontSize:14,fontWeight:700,color:"#333"}}>{fmtYen(catTotal)}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <span style={{fontSize:14,fontWeight:700,color:"#333"}}>{fmtYen(catTotal)}</span>
+                          <span style={{fontSize:11,color:"#999"}}>{isCollapsed?"▶":"▼"}</span>
+                        </div>
                       </div>
-                      {grouped[cat].map((f,fi)=>{
+                      {!isCollapsed && grouped[cat].map((f,fi)=>{
                         const isRec=records.some(r=>r.date.startsWith(vYear+"-"+pad(vMonth))&&r.memo===f.name&&r.isFixed);
                         const showDayHeader = fi===0 || grouped[cat][fi-1].day!==f.day;
                         return (
