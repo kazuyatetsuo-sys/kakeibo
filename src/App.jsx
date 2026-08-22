@@ -33,11 +33,26 @@ const gasPost = async body => { if(!GAS_URL) return {ok:false}; const r=await fe
 
 // ── TagEditor ─────────────────────────────────────────────────────────────────
 function TagEditor({ title, items, onSave, onClose }) {
-  const [list, setList] = useState([...items]);
+  const [list, setList] = useState(items.map(v=>({orig:v,val:v})));
   const [inp, setInp] = useState("");
-  const add = () => { const v=inp.trim(); if(v&&!list.includes(v)){setList([...list,v]);setInp("");} };
+  const [editIdx, setEditIdx] = useState(null);
+  const [editVal, setEditVal] = useState("");
+  const add = () => { const v=inp.trim(); if(v&&!list.some(x=>x.val===v)){setList([...list,{orig:null,val:v}]);setInp("");} };
   const up = i => { if(i===0) return; const l=[...list]; [l[i-1],l[i]]=[l[i],l[i-1]]; setList(l); };
   const dn = i => { if(i===list.length-1) return; const l=[...list]; [l[i],l[i+1]]=[l[i+1],l[i]]; setList(l); };
+  const startEdit = i => { setEditIdx(i); setEditVal(list[i].val); };
+  const commitEdit = () => {
+    const v = editVal.trim();
+    if(v && editIdx!==null && !list.some((x,j)=>j!==editIdx&&x.val===v)){
+      setList(l=>l.map((x,j)=>j===editIdx?{...x,val:v}:x));
+    }
+    setEditIdx(null);
+  };
+  const save = () => {
+    const renames = list.filter(x=>x.orig && x.orig!==x.val).map(x=>({oldName:x.orig,newName:x.val}));
+    onSave(list.map(x=>x.val), renames);
+    onClose();
+  };
   return (
     <div style={M.overlay}>
       <div style={M.modal}>
@@ -45,7 +60,15 @@ function TagEditor({ title, items, onSave, onClose }) {
         <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:14}}>
           {list.map((item,i) => (
             <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",background:"#f7f7f4",borderRadius:8}}>
-              <span style={{flex:1,fontSize:14}}>{item}</span>
+              {editIdx===i ? (
+                <input autoFocus style={{...M.inp,flex:1,padding:"4px 8px"}} value={editVal}
+                  onChange={e=>setEditVal(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter")commitEdit(); if(e.key==="Escape")setEditIdx(null);}}
+                  onBlur={commitEdit} />
+              ) : (
+                <span style={{flex:1,fontSize:14}}>{item.val}</span>
+              )}
+              <button style={M.sortBtn} onClick={()=>startEdit(i)}>✎</button>
               <button style={M.sortBtn} onClick={()=>up(i)} disabled={i===0}>↑</button>
               <button style={M.sortBtn} onClick={()=>dn(i)} disabled={i===list.length-1}>↓</button>
               <button style={M.xBtn} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
@@ -58,7 +81,7 @@ function TagEditor({ title, items, onSave, onClose }) {
         </div>
         <div style={M.btns}>
           <button style={M.cancel} onClick={onClose}>キャンセル</button>
-          <button style={M.save} onClick={()=>{onSave(list);onClose();}}>保存</button>
+          <button style={M.save} onClick={save}>保存</button>
         </div>
       </div>
     </div>
@@ -67,20 +90,50 @@ function TagEditor({ title, items, onSave, onClose }) {
 
 // ── CatPayeeEditor ────────────────────────────────────────────────────────────
 function CatPayeeEditor({ cats, payees, onSave, onClose }) {
-  const [map, setMap] = useState(()=>{ const m={}; cats.forEach(c=>{m[c]=[...(payees[c]||[])]}); return m; });
+  const [map, setMap] = useState(()=>{ const m={}; cats.forEach(c=>{m[c]=(payees[c]||[]).map(v=>({orig:v,val:v}))}); return m; });
   const [sel, setSel] = useState(cats[0]||"");
   const [inp, setInp] = useState("");
-  const add = () => { const v=inp.trim(); if(v&&sel&&!(map[sel]||[]).includes(v)){setMap(m=>({...m,[sel]:[...(m[sel]||[]),v]}));setInp("");} };
+  const [editIdx, setEditIdx] = useState(null);
+  const [editVal, setEditVal] = useState("");
+  const add = () => { const v=inp.trim(); if(v&&sel&&!(map[sel]||[]).some(x=>x.val===v)){setMap(m=>({...m,[sel]:[...(m[sel]||[]),{orig:null,val:v}]}));setInp("");} };
+  const startEdit = i => { setEditIdx(i); setEditVal(map[sel][i].val); };
+  const commitEdit = () => {
+    const v = editVal.trim();
+    if(v && editIdx!==null && !(map[sel]||[]).some((x,j)=>j!==editIdx&&x.val===v)){
+      setMap(m=>({...m,[sel]:m[sel].map((x,j)=>j===editIdx?{...x,val:v}:x)}));
+    }
+    setEditIdx(null);
+  };
+  const save = () => {
+    const renames = [];
+    const outMap = {};
+    Object.keys(map).forEach(c=>{
+      outMap[c] = map[c].map(x=>x.val);
+      map[c].forEach(x=>{ if(x.orig && x.orig!==x.val) renames.push({oldName:x.orig,newName:x.val}); });
+    });
+    onSave(outMap, renames);
+    onClose();
+  };
   return (
     <div style={M.overlay}>
       <div style={{...M.modal,maxWidth:520}}>
         <h3 style={M.mTitle}>支払い先の編集</h3>
         <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:12}}>
-          {cats.map(c => <button key={c} style={{...M.catTab,...(sel===c?M.catTabOn:{})}} onClick={()=>setSel(c)}>{c}</button>)}
+          {cats.map(c => <button key={c} style={{...M.catTab,...(sel===c?M.catTabOn:{})}} onClick={()=>{setSel(c);setEditIdx(null);}}>{c}</button>)}
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12,minHeight:32}}>
           {(map[sel]||[]).map((p,i) => (
-            <span key={i} style={M.tag}>{p}<button style={M.xBtn} onClick={()=>setMap(m=>({...m,[sel]:m[sel].filter((_,j)=>j!==i)}))}>×</button></span>
+            editIdx===i ? (
+              <input key={i} autoFocus style={{...M.inp,padding:"4px 8px",width:120}} value={editVal}
+                onChange={e=>setEditVal(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter")commitEdit(); if(e.key==="Escape")setEditIdx(null);}}
+                onBlur={commitEdit} />
+            ) : (
+              <span key={i} style={M.tag}>
+                <span style={{cursor:"pointer"}} onClick={()=>startEdit(i)}>{p.val}</span>
+                <button style={M.xBtn} onClick={()=>setMap(m=>({...m,[sel]:m[sel].filter((_,j)=>j!==i)}))}>×</button>
+              </span>
+            )
           ))}
         </div>
         <div style={{display:"flex",gap:8,marginBottom:14}}>
@@ -89,7 +142,7 @@ function CatPayeeEditor({ cats, payees, onSave, onClose }) {
         </div>
         <div style={M.btns}>
           <button style={M.cancel} onClick={onClose}>キャンセル</button>
-          <button style={M.save} onClick={()=>{onSave(map);onClose();}}>保存</button>
+          <button style={M.save} onClick={save}>保存</button>
         </div>
       </div>
     </div>
@@ -235,8 +288,8 @@ function PatternModal({ idx, pattern, cats, catColors, catPayees, bizCats, bizCa
   const [f, setF] = useState(pattern ? {...pattern,amount:String(pattern.amount)} : empty);
   const payeesToShow = f.category ? (catPayees[f.category]||[]) : [];
   const save = () => {
-    if(!f.label||!f.amount||!f.category) return;
-    onSave(idx,{...f,amount:Number(f.amount)});
+    if(!f.label||!f.category) return;
+    onSave(idx,{...f,amount:f.amount!==""?Number(f.amount):""});
     onClose();
   };
   return (
@@ -660,6 +713,24 @@ export default function App() {
     setEditRec(null); showToast("更新しました ✓");
     sync({action:"deleteRecord",id:upd.id});
     sync({action:"addRecord",record:{...upd,amount:Number(upd.amount)}});
+  };
+
+  const applyCategoryRename = async (oldName,newName) => {
+    if(!oldName||!newName||oldName===newName) return;
+    const affected = records.filter(r=>r.category===oldName||r.bizCategory===oldName);
+    if(affected.length===0) return;
+    const updated = affected.map(r=>({...r,category:r.category===oldName?newName:r.category,bizCategory:r.bizCategory===oldName?newName:r.bizCategory}));
+    setRecords(prev=>prev.map(r=>{ const u=updated.find(x=>x.id===r.id); return u||r; }));
+    for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+  };
+
+  const applyPayeeRename = async (oldName,newName) => {
+    if(!oldName||!newName||oldName===newName) return;
+    const affected = records.filter(r=>r.payee===oldName);
+    if(affected.length===0) return;
+    const updated = affected.map(r=>({...r,payee:newName}));
+    setRecords(prev=>prev.map(r=>{ const u=updated.find(x=>x.id===r.id); return u||r; }));
+    for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
   };
 
   const applyFixed = () => {
@@ -1294,10 +1365,10 @@ export default function App() {
 
       {tab!=="input" && <button style={S.fab} onClick={()=>setTab("input")}>＋ 入力</button>}
 
-      {editCat    && <TagEditor title="カテゴリーの編集" items={cats}    onSave={l=>{setCats(l);saveSetting("categories",l);}}     onClose={()=>setEditCat(false)} />}
-      {editBizCat && <TagEditor title="事業カテゴリーの編集" items={bizCats} onSave={l=>{setBizCats(l);saveSetting("bizCategories",l);}} onClose={()=>setEditBizCat(false)} />}
-      {editCatP   && <CatPayeeEditor cats={cats}    payees={catPayees} onSave={m=>{setCatPayees(m);saveSetting("catPayees",m);}}   onClose={()=>setEditCatP(false)} />}
-      {editBizP   && <CatPayeeEditor cats={bizCats} payees={bizPayees} onSave={m=>{setBizPayees(m);saveSetting("bizCatPayees",m);}} onClose={()=>setEditBizP(false)} />}
+      {editCat    && <TagEditor title="カテゴリーの編集" items={cats}    onSave={(l,renames)=>{setCats(l);saveSetting("categories",l);(async()=>{for(const {oldName,newName} of renames)await applyCategoryRename(oldName,newName);if(renames.length)showToast("カテゴリー名を更新しました ✓");})();}}     onClose={()=>setEditCat(false)} />}
+      {editBizCat && <TagEditor title="事業カテゴリーの編集" items={bizCats} onSave={(l,renames)=>{setBizCats(l);saveSetting("bizCategories",l);(async()=>{for(const {oldName,newName} of renames)await applyCategoryRename(oldName,newName);if(renames.length)showToast("カテゴリー名を更新しました ✓");})();}} onClose={()=>setEditBizCat(false)} />}
+      {editCatP   && <CatPayeeEditor cats={cats}    payees={catPayees} onSave={(m,renames)=>{setCatPayees(m);saveSetting("catPayees",m);(async()=>{for(const {oldName,newName} of renames)await applyPayeeRename(oldName,newName);if(renames.length)showToast("支払い先名を更新しました ✓");})();}}   onClose={()=>setEditCatP(false)} />}
+      {editBizP   && <CatPayeeEditor cats={bizCats} payees={bizPayees} onSave={(m,renames)=>{setBizPayees(m);saveSetting("bizCatPayees",m);(async()=>{for(const {oldName,newName} of renames)await applyPayeeRename(oldName,newName);if(renames.length)showToast("支払い先名を更新しました ✓");})();}} onClose={()=>setEditBizP(false)} />}
       {addFixed   && <AddFixedModal cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} onAdd={item=>{const upd=[...fixed,item];setFixed(upd);saveSetting("fixedCosts",upd);showToast("固定費を追加しました ✓");}} onClose={()=>setAddFixed(false)} />}
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
