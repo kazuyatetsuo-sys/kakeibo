@@ -612,7 +612,7 @@ export default function App() {
   const [bizCats, setBizCats]   = useState(DEFAULT_BIZ_CATS);
   const [bizPayees, setBizPayees] = useState(DEFAULT_BIZ_PAYEES);
   const [fixed, setFixed]       = useState([]);
-  const [form, setForm]         = useState({date:todayStr(),amount:"",category:"",payee:"",memo:"",isFixed:false,isBiz:false,bizCategory:""});
+  const [form, setForm]         = useState({date:todayStr(),amount:"",category:"",payee:"",memo:"",isFixed:false,isBiz:false,bizCategory:"",isSpecial:false});
   const [editCat, setEditCat]   = useState(false);
   const [editCatP, setEditCatP] = useState(false);
   const [editBizCat, setEditBizCat] = useState(false);
@@ -647,7 +647,7 @@ export default function App() {
       const res = await (await fetch(GAS_URL+"?action=getAll")).json();
       if(res.ok && !writing.current) {
         if(res.records && res.records.length>0) {
-          setRecords(res.records.map(r=>({...r,date:normDate(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE",bizCategory:r.bizCategory||""})));
+          setRecords(res.records.map(r=>({...r,date:normDate(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE",isSpecial:r.isSpecial===true||r.isSpecial==="TRUE",bizCategory:r.bizCategory||""})));
         }
         const s=res.settings||{};
         if(s.categories)    setCats(s.categories);
@@ -699,10 +699,10 @@ export default function App() {
   const addRecord = () => {
     const cat = form.isBiz ? (form.bizCategory||form.category) : form.category;
     if(!form.amount||!cat||!form.date){ showToast("日付・金額・カテゴリーは必須です"); return; }
-    const rec = {id:Date.now(),date:normDate(form.date),amount:Number(form.amount),category:form.category,bizCategory:form.isBiz?form.bizCategory:"",payee:form.payee||"",memo:form.memo||"",isFixed:false,isBiz:form.isBiz};
+    const rec = {id:Date.now(),date:normDate(form.date),amount:Number(form.amount),category:form.category,bizCategory:form.isBiz?form.bizCategory:"",payee:form.payee||"",memo:form.memo||"",isFixed:false,isBiz:form.isBiz,isSpecial:form.isSpecial};
     setRecords(p=>[...p,rec]);
     showToast("記録しました ✓");
-    setForm(f=>({...f,amount:"",memo:"",payee:"",isFixed:false,isBiz:false,bizCategory:""}));
+    setForm(f=>({...f,amount:"",memo:"",payee:"",isFixed:false,isBiz:false,bizCategory:"",isSpecial:false}));
     sync({action:"addRecord",record:rec});
   };
 
@@ -750,6 +750,9 @@ export default function App() {
   const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr; });
   const byDate = {}; mRecs.forEach(r=>{ const d=normDate(r.date); if(!byDate[d])byDate[d]={}; byDate[d][r.category]=(byDate[d][r.category]||0)+Number(r.amount); });
   const mTotal = mRecs.reduce((s,r)=>s+Number(r.amount),0);
+  const mSpecialRecs = mRecs.filter(r=>r.isSpecial);
+  const mSpecialTotal = mSpecialRecs.reduce((s,r)=>s+Number(r.amount),0);
+  const mNormalTotal = mTotal - mSpecialTotal;
   const usedCats = cats.filter(c=>mRecs.some(r=>r.category===c));
   const catTotals = {}; usedCats.forEach(c=>{catTotals[c]=mRecs.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
 
@@ -887,7 +890,10 @@ export default function App() {
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
                   <div style={{background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
                     <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
-                    <div style={{fontSize:22,fontWeight:700}}>{fmtYen(mTotal)}</div>
+                    <div style={{fontSize:22,fontWeight:700}}>
+                      {fmtYen(mNormalTotal)}
+                      {mSpecialTotal>0 && <span style={{fontSize:12,fontWeight:600,color:"#e07a5f",marginLeft:6}}>（特別 +{fmtYen(mSpecialTotal)}）</span>}
+                    </div>
                   </div>
                   <div style={{display:"flex",gap:8}}>
                     <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setShowTodayDetail(true)}>
@@ -951,8 +957,13 @@ export default function App() {
               </div>
             )}
 
-            <div style={{marginTop:14}}>
-              <Toggle label="事業経費" on={form.isBiz} color="#3aaa82" onChange={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:""}))} />
+            <div style={{marginTop:14,display:"flex",gap:8}}>
+              <div style={{flex:1}}>
+                <Toggle label="事業経費" on={form.isBiz} color="#3aaa82" onChange={()=>setForm(f=>({...f,isBiz:!f.isBiz,bizCategory:""}))} />
+              </div>
+              <div style={{flex:1}}>
+                <Toggle label="特別支出" on={form.isSpecial} color="#e07a5f" onChange={()=>setForm(f=>({...f,isSpecial:!f.isSpecial}))} />
+              </div>
             </div>
 
             <label style={S.label}>メモ</label>
@@ -1002,6 +1013,18 @@ export default function App() {
                 <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>月合計</span>
                 <span style={{fontSize:26,fontWeight:700}}>{fmtYen(mTotal)}</span>
               </div>
+              {mSpecialRecs.length>0 && (
+                <div style={{display:"flex",gap:8,marginBottom:12}}>
+                  <div style={{flex:1,background:"#fff",borderRadius:8,padding:"8px 10px",border:"1px solid #eeeee9"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase"}}>通常支出</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"#333"}}>{fmtYen(mNormalTotal)}</div>
+                  </div>
+                  <div style={{flex:1,background:"#fdf1ee",borderRadius:8,padding:"8px 10px",border:"1px solid #f3cfc4"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#e07a5f",letterSpacing:1,textTransform:"uppercase"}}>特別支出（{mSpecialRecs.length}件）</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"#e07a5f"}}>{fmtYen(mSpecialTotal)}</div>
+                  </div>
+                </div>
+              )}
               {mTotal>0 && (
                 <div style={{marginBottom:8}}>
                   <DonutChart
