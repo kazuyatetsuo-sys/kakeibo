@@ -470,6 +470,73 @@ function DetailPanel({ expandedDate, monthRecords, onClose, onDelete }) {
   );
 }
 
+// ── DonutChart ────────────────────────────────────────────────────────────────
+function DonutChart({ items, colors, total, size=160, thickness=22, onSegClick, activeKey }) {
+  const r = 40, cx = 50, cy = 50;
+  const circumference = 2*Math.PI*r;
+  let cumulative = 0;
+  return (
+    <div style={{position:"relative",width:size,height:size,margin:"0 auto"}}>
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#eeeee9" strokeWidth={thickness} />
+        {items.map(it=>{
+          const pct = total>0 ? it.value/total : 0;
+          const dash = pct*circumference;
+          const dashArray = `${dash} ${circumference-dash}`;
+          const dashOffset = -cumulative*circumference;
+          cumulative += pct;
+          return (
+            <circle key={it.key} cx={cx} cy={cy} r={r} fill="none" stroke={colors[it.key]||"#ccc"} strokeWidth={thickness}
+              strokeDasharray={dashArray} strokeDashoffset={dashOffset}
+              transform={`rotate(-90 ${cx} ${cy})`}
+              style={{cursor:onSegClick?"pointer":"default",opacity:activeKey&&activeKey!==it.key?0.35:1,transition:"opacity .15s"}}
+              onClick={onSegClick?()=>onSegClick(it.key):undefined}>
+              <title>{it.label}: {fmtYen(it.value)}</title>
+            </circle>
+          );
+        })}
+      </svg>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+        <span style={{fontSize:10,color:"#999",fontWeight:600}}>合計</span>
+        <span style={{fontSize:16,fontWeight:700,color:"#1a1a1a"}}>{fmtYen(total)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── TodayDetailModal ──────────────────────────────────────────────────────────
+function TodayDetailModal({ date, records, catColors, onClose }) {
+  const dow = DAYS[new Date(date).getDay()];
+  const total = records.reduce((s,r)=>s+Number(r.amount),0);
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>{date.slice(5).replace("-","/")} {dow} の内訳</h3>
+          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        {records.length===0 ? (
+          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+        ) : (
+          <Fragment>
+            {records.map(r=>(
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f0f0ec"}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:catColors[r.category]||"#aaa",flexShrink:0,display:"inline-block"}} />
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:600,color:"#1a1a1a"}}>{r.payee||"—"}</div>
+                  <div style={{fontSize:11,color:"#999",marginTop:2}}>{r.category}{r.memo?" — "+r.memo:""}</div>
+                </div>
+                <span style={{fontSize:14,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
+              </div>
+            ))}
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+          </Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, on, color, onChange }) {
   return (
@@ -508,6 +575,7 @@ export default function App() {
   const [bzMonth, setBzMonth]   = useState(new Date().getMonth()+1);
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
+  const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
   const writing = useRef(false);
@@ -751,7 +819,7 @@ export default function App() {
                     <div style={{fontSize:22,fontWeight:700}}>{fmtYen(mTotal)}</div>
                   </div>
                   <div style={{display:"flex",gap:8}}>
-                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setShowTodayDetail(true)}>
                       <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
                     </div>
@@ -771,7 +839,10 @@ export default function App() {
             </div>
             <div>
               <label style={S.label}>金額（円）</label>
-              <input style={{...S.inp,fontSize:20,fontWeight:700,textAlign:"right",width:"100%",boxSizing:"border-box"}} type="number" inputMode="numeric" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+              <div style={{display:"flex",gap:8}}>
+                <input style={{...S.inp,fontSize:20,fontWeight:700,textAlign:"right",flex:1,minWidth:0,boxSizing:"border-box"}} type="number" inputMode="numeric" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
+                <button style={{width:80,flexShrink:0,background:"#1a1a1a",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}} onClick={addRecord}>記録する</button>
+              </div>
             </div>
 
             <div style={S.rowLabel}>
@@ -815,7 +886,7 @@ export default function App() {
 
             <label style={S.label}>メモ</label>
             <input style={{...S.inp,width:"100%",boxSizing:"border-box"}} placeholder="任意" value={form.memo} onChange={e=>setForm(f=>({...f,memo:e.target.value}))} />
-            <button style={{...S.primaryBtn,marginBottom:"80px"}} onClick={addRecord}>記録する</button>
+            <div style={{marginBottom:"80px"}} />
 
             {records.length>0 && (
               <div style={{marginTop:24}}>
@@ -861,16 +932,14 @@ export default function App() {
                 <span style={{fontSize:26,fontWeight:700}}>{fmtYen(mTotal)}</span>
               </div>
               {mTotal>0 && (
-                <div style={{height:40,borderRadius:10,overflow:"hidden",background:"#eeeee9",display:"flex",marginBottom:4}}>
-                  {usedCats.map(c=>{
-                    const pct=catTotals[c]/mTotal*100;
-                    return (
-                      <div key={c} style={{width:pct+"%",background:catColors[c],height:"100%",position:"relative",overflow:"hidden",cursor:"pointer"}}
-                        onClick={()=>setExpCat(expCat===c?null:c)} title={c+": "+fmtYen(catTotals[c])}>
-                        {pct>15 && <span style={{position:"absolute",left:6,top:"50%",transform:"translateY(-50%)",fontSize:11,fontWeight:600,color:"rgba(255,255,255,.9)",whiteSpace:"nowrap",overflow:"hidden",maxWidth:"calc(100% - 8px)"}}>{c}</span>}
-                      </div>
-                    );
-                  })}
+                <div style={{marginBottom:8}}>
+                  <DonutChart
+                    items={usedCats.map(c=>({key:c,label:c,value:catTotals[c]}))}
+                    colors={catColors}
+                    total={mTotal}
+                    onSegClick={c=>setExpCat(expCat===c?null:c)}
+                    activeKey={expCat}
+                  />
                 </div>
               )}
               {mTotal>0 && (()=>{
@@ -1133,7 +1202,13 @@ export default function App() {
                 fixed.forEach(f=>{catTotals[f.category]=(catTotals[f.category]||0)+f.amount;});
                 const sortedCats=cats.filter(c=>catTotals[c]).concat(Object.keys(catTotals).filter(c=>!cats.includes(c)));
                 return (
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <Fragment>
+                  <DonutChart
+                    items={sortedCats.map(c=>({key:c,label:c,value:catTotals[c]}))}
+                    colors={catColors}
+                    total={fixTotal}
+                  />
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginTop:12}}>
                     <tbody>
                       {sortedCats.map(c=>(
                         <tr key={c} style={{borderTop:"1px solid #eeeee9"}}>
@@ -1146,6 +1221,7 @@ export default function App() {
                       ))}
                     </tbody>
                   </table>
+                  </Fragment>
                 );
               })()}
             </div>
@@ -1225,6 +1301,7 @@ export default function App() {
       {addFixed   && <AddFixedModal cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} onAdd={item=>{const upd=[...fixed,item];setFixed(upd);saveSetting("fixedCosts",upd);showToast("固定費を追加しました ✓");}} onClose={()=>setAddFixed(false)} />}
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
+      {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
