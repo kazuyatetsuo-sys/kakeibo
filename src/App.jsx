@@ -742,6 +742,7 @@ export default function App() {
   const [bzMonth, setBzMonth]   = useState(new Date().getMonth()+1);
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
+  const [expBzCat, setExpBzCat] = useState(null);
   const [showBulkRecat, setShowBulkRecat] = useState(false);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
@@ -1349,10 +1350,34 @@ export default function App() {
                 <span style={{fontSize:26,fontWeight:700,color:"#3aaa82"}}>{fmtYen(bzMTotal)}</span>
               </div>
               {bzMTotal>0 && (
-                <div style={{height:10,borderRadius:10,overflow:"hidden",background:"#eeeee9",display:"flex"}}>
-                  {bzUsed.map(c=><div key={c} style={{width:(bzTotals[c]/bzMTotal*100)+"%",background:bizCatColors[c],height:"100%"}} />)}
+                <div style={{marginBottom:8}}>
+                  <DonutChart
+                    items={bzUsed.map(c=>({key:c,label:c,value:bzTotals[c]}))}
+                    colors={bizCatColors}
+                    total={bzMTotal}
+                    size={280}
+                    thickness={26}
+                    radius={36}
+                    showLabels
+                    onSegClick={c=>setExpBzCat(expBzCat===c?null:c)}
+                    activeKey={expBzCat}
+                  />
                 </div>
               )}
+              {bzMTotal>0 && (()=>{
+                const sorted = bzUsed.slice().sort((a,b)=>bzTotals[b]-bzTotals[a]);
+                return (
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px",marginTop:10}}>
+                    {sorted.map(c=>(
+                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:bizCatColors[c],flexShrink:0,display:"inline-block"}} />
+                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(bzTotals[c])}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               {bzMTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この月の事業経費はありません</p>}
             </div>
             {bzYRecs.length>0 && (
