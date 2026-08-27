@@ -504,22 +504,24 @@ function MonthlyList({ mRecs, today, catColors, bizCatColors, onEdit, onDelete }
 
 // ── DetailPanel ───────────────────────────────────────────────────────────────
 function DetailPanel({ expandedDate, monthRecords, onClose, onDelete }) {
-  if(!expandedDate || !expandedDate.includes(":")) return null;
-  const sep = expandedDate.indexOf(":");
-  const epDate = expandedDate.slice(0, sep);
-  const epCat  = expandedDate.slice(sep + 1);
-  const epDow  = DAYS[new Date(epDate).getDay()];
-  const epRecs = monthRecords.filter(r => normDate(r.date)===epDate && r.category===epCat);
+  if(!expandedDate || expandedDate.split("|").length!==3) return null;
+  const [epStart, epEnd, epCat] = expandedDate.split("|");
+  const isRange = epStart!==epEnd;
+  const epRecs = monthRecords.filter(r => { const d=normDate(r.date); return d>=epStart && d<=epEnd && r.category===epCat; });
   if(!epRecs.length) return null;
   const sub = epRecs.reduce((s,r)=>s+Number(r.amount),0);
+  const rangeLabel = isRange
+    ? epStart.slice(5).replace("-","/")+"〜"+epEnd.slice(5).replace("-","/")
+    : epStart.slice(5).replace("-","/")+" "+DAYS[new Date(epStart).getDay()];
   return (
     <div style={{marginTop:8,background:"#f7f7f4",borderRadius:10,padding:"14px 16px",border:"1px solid #eeeee9"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-        <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{epDate.slice(5).replace("-","/")} {epDow} · {epCat}</span>
+        <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{rangeLabel} · {epCat}</span>
         <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
       </div>
       {epRecs.map(r => (
         <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid #eaeae5",fontSize:13}}>
+          {isRange && <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>}
           <span style={{color:"#444",fontWeight:500,flexShrink:0}}>{r.payee||"—"}</span>
           {r.memo && <span style={{color:"#aaa",flex:1}}>「{r.memo}」</span>}
           {r.isFixed && <span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600}}>固定</span>}
@@ -534,30 +536,43 @@ function DetailPanel({ expandedDate, monthRecords, onClose, onDelete }) {
 }
 
 // ── DonutChart ────────────────────────────────────────────────────────────────
-function DonutChart({ items, colors, total, size=160, thickness=22, onSegClick, activeKey }) {
-  const r = 40, cx = 50, cy = 50;
+function DonutChart({ items, colors, total, size=160, thickness=22, radius=40, onSegClick, activeKey, showLabels=false, labelMinPct=0.06 }) {
+  const r = radius, cx = 50, cy = 50;
   const circumference = 2*Math.PI*r;
   let cumulative = 0;
+  const labels = [];
+  const segments = items.map(it=>{
+    const pct = total>0 ? it.value/total : 0;
+    const dash = pct*circumference;
+    const dashArray = `${dash} ${circumference-dash}`;
+    const dashOffset = -cumulative*circumference;
+    if(showLabels && pct>=labelMinPct){
+      const mid = cumulative + pct/2;
+      const theta = 2*Math.PI*mid;
+      labels.push({ key:it.key, label:it.label, pct, lx: cx+r*Math.sin(theta), ly: cy-r*Math.cos(theta) });
+    }
+    cumulative += pct;
+    return (
+      <circle key={it.key} cx={cx} cy={cy} r={r} fill="none" stroke={colors[it.key]||"#ccc"} strokeWidth={thickness}
+        strokeDasharray={dashArray} strokeDashoffset={dashOffset}
+        transform={`rotate(-90 ${cx} ${cy})`}
+        style={{cursor:onSegClick?"pointer":"default",opacity:activeKey&&activeKey!==it.key?0.35:1,transition:"opacity .15s"}}
+        onClick={onSegClick?()=>onSegClick(it.key):undefined}>
+        <title>{it.label}: {fmtYen(it.value)}</title>
+      </circle>
+    );
+  });
   return (
-    <div style={{position:"relative",width:size,height:size,margin:"0 auto"}}>
-      <svg width={size} height={size} viewBox="0 0 100 100">
+    <div style={{position:"relative",width:size,maxWidth:"100%",aspectRatio:"1 / 1",margin:"0 auto"}}>
+      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",display:"block"}}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#eeeee9" strokeWidth={thickness} />
-        {items.map(it=>{
-          const pct = total>0 ? it.value/total : 0;
-          const dash = pct*circumference;
-          const dashArray = `${dash} ${circumference-dash}`;
-          const dashOffset = -cumulative*circumference;
-          cumulative += pct;
-          return (
-            <circle key={it.key} cx={cx} cy={cy} r={r} fill="none" stroke={colors[it.key]||"#ccc"} strokeWidth={thickness}
-              strokeDasharray={dashArray} strokeDashoffset={dashOffset}
-              transform={`rotate(-90 ${cx} ${cy})`}
-              style={{cursor:onSegClick?"pointer":"default",opacity:activeKey&&activeKey!==it.key?0.35:1,transition:"opacity .15s"}}
-              onClick={onSegClick?()=>onSegClick(it.key):undefined}>
-              <title>{it.label}: {fmtYen(it.value)}</title>
-            </circle>
-          );
-        })}
+        {segments}
+        {labels.map(l=>(
+          <text key={l.key} x={l.lx} y={l.ly} textAnchor="middle" fill="#fff" stroke="rgba(0,0,0,.35)" strokeWidth={0.6} paintOrder="stroke" style={{pointerEvents:"none",fontWeight:700}}>
+            <tspan x={l.lx} dy="-0.9" fontSize="4.2">{l.label}</tspan>
+            <tspan x={l.lx} dy="3.6" fontSize="3.6">{Math.round(l.pct*100)}%</tspan>
+          </text>
+        ))}
       </svg>
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
         <span style={{fontSize:10,color:"#999",fontWeight:600}}>合計</span>
@@ -797,7 +812,9 @@ export default function App() {
   const csStr = prevYear+"-"+pad(prevMonth)+"-19";
   const ceStr = vYear+"-"+pad(vMonth)+"-18";
   const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr; });
-  const byDate = {}; mRecs.forEach(r=>{ const d=normDate(r.date); if(!byDate[d])byDate[d]={}; byDate[d][r.category]=(byDate[d][r.category]||0)+Number(r.amount); });
+  const mondayOf = d => { const dt=new Date(d); const diff=dt.getDay()===0?6:dt.getDay()-1; const m=new Date(dt); m.setDate(dt.getDate()-diff); return m.getFullYear()+"-"+pad(m.getMonth()+1)+"-"+pad(m.getDate()); };
+  const weekRange = monStr => { const s=new Date(monStr); s.setDate(s.getDate()+6); const sunStr=s.getFullYear()+"-"+pad(s.getMonth()+1)+"-"+pad(s.getDate()); return { sunStr, label: monStr.slice(5).replace("-","/")+"〜"+sunStr.slice(5).replace("-","/") }; };
+  const byWeek = {}; mRecs.forEach(r=>{ const d=normDate(r.date); const wk=mondayOf(d); if(!byWeek[wk])byWeek[wk]={}; byWeek[wk][r.category]=(byWeek[wk][r.category]||0)+Number(r.amount); });
   const mTotal = mRecs.reduce((s,r)=>s+Number(r.amount),0);
   const mSpecialRecs = mRecs.filter(r=>r.isSpecial);
   const mSpecialTotal = mSpecialRecs.reduce((s,r)=>s+Number(r.amount),0);
@@ -1080,6 +1097,10 @@ export default function App() {
                     items={usedCats.map(c=>({key:c,label:c,value:catTotals[c]}))}
                     colors={catColors}
                     total={mTotal}
+                    size={280}
+                    thickness={26}
+                    radius={36}
+                    showLabels
                     onSegClick={c=>setExpCat(expCat===c?null:c)}
                     activeKey={expCat}
                   />
@@ -1104,13 +1125,13 @@ export default function App() {
               {mTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
             </div>
 
-            {Object.keys(byDate).length>0 && (
+            {Object.keys(byWeek).length>0 && (
               <div>
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"60vh",borderRadius:10,border:"1px solid #eeeee9"}}>
                   <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                     <thead style={{position:"sticky",top:0,zIndex:5,background:"#fafaf8"}}>
                       <tr>
-                        <th style={{...S.th,...S.thFix}}>日付</th>
+                        <th style={{...S.th,...S.thFix}}>週</th>
                         <th style={{...S.th,background:"#f0f0ec",color:"#333",minWidth:80}}>合計</th>
                         {usedCats.map(c=>(
                           <th key={c} style={S.th}>
@@ -1125,25 +1146,21 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.keys(byDate).sort().reverse().map((date,di)=>{
-                        const dayTotal=Object.values(byDate[date]).reduce((a,b)=>a+b,0);
-                        const dow=DAYS[new Date(date).getDay()];
-                        const isSun=new Date(date).getDay()===0;
-                        const isSat=new Date(date).getDay()===6;
-                        const isToday=date===today;
-                        const dateColor=isSun?"#e07a5f":isSat?"#4f7cac":"#444";
+                      {Object.keys(byWeek).sort().reverse().map((wk,wi)=>{
+                        const { sunStr, label } = weekRange(wk);
+                        const weekTotal=Object.values(byWeek[wk]).reduce((a,b)=>a+b,0);
+                        const isThisWeek = mondayOf(today)===wk;
                         return (
-                          <Fragment key={date}>
-                            <tr style={{...(di%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isToday?{background:"#eef4fb"}:{})}}>
-                              <td style={{...S.td,...S.thFix,color:dateColor,background:isToday?"#eef4fb":di%2===0?"#fff":"#fdfdfb"}}>
-                                {date.slice(5).replace("-","/")}
-                                <span style={{fontSize:11,color:dateColor,opacity:.7,marginLeft:3}}>{dow}</span>
-                                {isToday&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>today</span>}
+                          <Fragment key={wk}>
+                            <tr style={{...(wi%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isThisWeek?{background:"#eef4fb"}:{})}}>
+                              <td style={{...S.td,...S.thFix,color:"#444",background:isThisWeek?"#eef4fb":wi%2===0?"#fff":"#fdfdfb"}}>
+                                {label}
+                                {isThisWeek&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今週</span>}
                               </td>
-                              <td style={{...S.td,fontWeight:600,background:"#fafaf8"}}>{fmtYen(dayTotal)}</td>
+                              <td style={{...S.td,fontWeight:600,background:"#fafaf8"}}>{fmtYen(weekTotal)}</td>
                               {usedCats.map(c=>{
-                                const amt=byDate[date][c];
-                                const ck=date+":"+c;
+                                const amt=byWeek[wk][c];
+                                const ck=wk+"|"+sunStr+"|"+c;
                                 return (
                                   <td key={c} style={{...S.td,...(amt?{cursor:"pointer"}:{}),...(expDate===ck?{background:catColors[c]+"22"}:{})}}
                                     onClick={()=>{ if(amt) setExpDate(expDate===ck?null:ck); }}>
