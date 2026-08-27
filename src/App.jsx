@@ -615,6 +615,57 @@ function TodayDetailModal({ date, records, catColors, onClose }) {
   );
 }
 
+// ── BulkRecategorizeModal ────────────────────────────────────────────────────
+function BulkRecategorizeModal({ records, cats, catColors, onApply, onClose }) {
+  const uncatRecs = records.filter(r=>!cats.includes(r.category));
+  const groups = {};
+  uncatRecs.forEach(r=>{ const k=r.category||""; (groups[k]=groups[k]||[]).push(r); });
+  const groupKeys = Object.keys(groups).sort((a,b)=>groups[b].length-groups[a].length);
+  const [selections, setSelections] = useState({});
+  const [applied, setApplied] = useState(new Set());
+
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:480,maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>未分類の一括編集</h3>
+          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        {groupKeys.length===0 ? (
+          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>未分類の記録はありません 🎉</p>
+        ) : (
+          <Fragment>
+            <p style={{fontSize:12,color:"#999",marginBottom:14}}>元のカテゴリー値ごとにグループ化しています。それぞれ正しいカテゴリーを選んで「適用」を押してください（全期間対象）。</p>
+            {groupKeys.map(k=>{
+              const recs = groups[k];
+              const total = recs.reduce((s,r)=>s+Number(r.amount),0);
+              const isApplied = applied.has(k);
+              return (
+                <div key={k} style={{marginBottom:14,padding:"12px 14px",background:isApplied?"#edfaf5":"#f7f7f4",borderRadius:10,border:"1px solid "+(isApplied?"#b2e0d0":"#eeeee9")}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
+                    <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{k===""?"（空欄）":`"${k}"`} <span style={{fontWeight:400,color:"#999"}}>（{recs.length}件）</span></span>
+                    <span style={{fontSize:13,fontWeight:700}}>{fmtYen(total)}</span>
+                  </div>
+                  {isApplied ? (
+                    <div style={{fontSize:12,color:"#3aaa82",fontWeight:600}}>✓ 「{selections[k]}」に設定しました</div>
+                  ) : (
+                    <Fragment>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+                        {cats.map(c=><button key={c} style={{...M.chip,...(selections[k]===c?{background:catColors[c],color:"#fff",borderColor:catColors[c]}:{})}} onClick={()=>setSelections(s=>({...s,[k]:c}))}>{c}</button>)}
+                      </div>
+                      <button style={{...M.save,padding:"6px 16px",fontSize:13,...(!selections[k]?{opacity:.4,cursor:"default"}:{})}} disabled={!selections[k]} onClick={async ()=>{ await onApply(recs.map(r=>r.id),selections[k]); setApplied(a=>new Set([...a,k])); }}>この{recs.length}件を適用</button>
+                    </Fragment>
+                  )}
+                </div>
+              );
+            })}
+          </Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── WeekDetailModal ───────────────────────────────────────────────────────────
 function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
   const total = records.reduce((s,r)=>s+Number(r.amount),0);
@@ -691,6 +742,7 @@ export default function App() {
   const [bzMonth, setBzMonth]   = useState(new Date().getMonth()+1);
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
+  const [showBulkRecat, setShowBulkRecat] = useState(false);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
@@ -801,6 +853,19 @@ export default function App() {
     try {
       for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
     } finally { writing.current = Math.max(0, writing.current-1); }
+  };
+
+  const bulkAssignCategory = async (ids,newCategory) => {
+    if(!newCategory || ids.length===0) return;
+    const idSet = new Set(ids);
+    const updated = records.filter(r=>idSet.has(r.id)).map(r=>({...r,category:newCategory}));
+    if(updated.length===0) return;
+    setRecords(prev=>prev.map(r=>{ const u=updated.find(x=>x.id===r.id); return u||r; }));
+    writing.current += 1;
+    try {
+      for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+    } finally { writing.current = Math.max(0, writing.current-1); }
+    showToast(updated.length+"件を「"+newCategory+"」に設定しました ✓");
   };
 
   const applyFixed = () => {
@@ -1136,6 +1201,7 @@ export default function App() {
                     <span style={{fontSize:13,fontWeight:700,color:"#555"}}>未分類の記録（カテゴリー未設定または現在存在しないカテゴリー）</span>
                     <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:18,padding:"0 2px"}} onClick={()=>setExpCat(null)}>×</button>
                   </div>
+                  <button style={{...S.editLink,display:"block",marginBottom:8}} onClick={()=>setShowBulkRecat(true)}>全期間の未分類をまとめて編集 →</button>
                   {uncatRecs.map(r=>(
                     <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid #eaeae5",fontSize:13}}>
                       <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
@@ -1488,6 +1554,7 @@ export default function App() {
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
       {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
       {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
+      {showBulkRecat && <BulkRecategorizeModal records={records} cats={cats} catColors={catColors} onApply={bulkAssignCategory} onClose={()=>setShowBulkRecat(false)} />}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
