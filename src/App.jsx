@@ -695,7 +695,7 @@ export default function App() {
   const [weekDetailRange, setWeekDetailRange] = useState(null);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
-  const writing = useRef(false);
+  const writing = useRef(0);
   const pressTimer = useRef(null);
   const didLongPress = useRef(false);
 
@@ -709,7 +709,7 @@ export default function App() {
     setSyncing(true);
     try {
       const res = await (await fetch(GAS_URL+"?action=getAll")).json();
-      if(res.ok && !writing.current) {
+      if(res.ok && writing.current===0) {
         if(res.records && res.records.length>0) {
           setRecords(res.records.map(r=>({...r,date:normDate(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE",isSpecial:r.isSpecial===true||r.isSpecial==="TRUE",bizCategory:r.bizCategory||""})));
         }
@@ -746,10 +746,10 @@ export default function App() {
 
   const sync = async body => {
     if(!GAS_URL) return;
-    writing.current = true;
+    writing.current += 1;
     setSyncing(true);
     try { await gasPost(body); } catch(e){ console.warn(e); }
-    setTimeout(()=>{ writing.current=false; }, 3000);
+    writing.current = Math.max(0, writing.current-1);
     setSyncing(false);
   };
 
@@ -785,7 +785,10 @@ export default function App() {
     if(affected.length===0) return;
     const updated = affected.map(r=>({...r,category:r.category===oldName?newName:r.category,bizCategory:r.bizCategory===oldName?newName:r.bizCategory}));
     setRecords(prev=>prev.map(r=>{ const u=updated.find(x=>x.id===r.id); return u||r; }));
-    for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+    writing.current += 1;
+    try {
+      for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+    } finally { writing.current = Math.max(0, writing.current-1); }
   };
 
   const applyPayeeRename = async (oldName,newName) => {
@@ -794,7 +797,10 @@ export default function App() {
     if(affected.length===0) return;
     const updated = affected.map(r=>({...r,payee:newName}));
     setRecords(prev=>prev.map(r=>{ const u=updated.find(x=>x.id===r.id); return u||r; }));
-    for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+    writing.current += 1;
+    try {
+      for(const u of updated){ await sync({action:"deleteRecord",id:u.id}); await sync({action:"addRecord",record:u}); }
+    } finally { writing.current = Math.max(0, writing.current-1); }
   };
 
   const applyFixed = () => {
