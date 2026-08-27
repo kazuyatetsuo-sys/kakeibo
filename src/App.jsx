@@ -743,6 +743,7 @@ export default function App() {
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
   const [expBzCat, setExpBzCat] = useState(null);
+  const [expYCat, setExpYCat]   = useState(null);
   const [showBulkRecat, setShowBulkRecat] = useState(false);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
@@ -916,6 +917,8 @@ export default function App() {
     return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12);
   });
   const yUsedCats = cats.filter(c=>Object.values(byMonth).some(m=>m[c]));
+  const yCatTotals = {}; yUsedCats.forEach(c=>{yCatTotals[c]=yRecs.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
+  const yTotal = yRecs.reduce((s,r)=>s+Number(r.amount),0);
 
   // 事業経費データ
   const bizRecs = records.filter(r=>r.isBiz&&r.bizCategory);
@@ -1293,10 +1296,39 @@ export default function App() {
               <button style={S.arrowBtn} onClick={()=>setVYear(y=>y+1)}>▶</button>
             </div>
             <div style={S.summaryBox}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                 <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>年間合計</span>
-                <span style={{fontSize:26,fontWeight:700}}>{fmtYen(yRecs.reduce((s,r)=>s+Number(r.amount),0))}</span>
+                <span style={{fontSize:26,fontWeight:700}}>{fmtYen(yTotal)}</span>
               </div>
+              {yTotal>0 && (
+                <div style={{marginBottom:8}}>
+                  <DonutChart
+                    items={yUsedCats.map(c=>({key:c,label:c,value:yCatTotals[c]}))}
+                    colors={catColors}
+                    total={yTotal}
+                    size={280}
+                    thickness={26}
+                    radius={36}
+                    showLabels
+                    onSegClick={c=>setExpYCat(expYCat===c?null:c)}
+                    activeKey={expYCat}
+                  />
+                </div>
+              )}
+              {yTotal>0 && (()=>{
+                const sorted = yUsedCats.slice().sort((a,b)=>yCatTotals[b]-yCatTotals[a]);
+                return (
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px",marginTop:10}}>
+                    {sorted.map(c=>(
+                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c],flexShrink:0,display:"inline-block"}} />
+                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(yCatTotals[c])}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             {yRecs.length===0 ? <p style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>この年の記録はありません</p> : (
               <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #eeeee9"}}>
@@ -1325,8 +1357,8 @@ export default function App() {
                     })}
                     <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
                       <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>年計</td>
-                      {yUsedCats.map(c=>{const s=yRecs.filter(r=>r.category===c).reduce((a,r)=>a+Number(r.amount),0);return<td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(s)}</td>;})}
-                      <td style={{...S.td,fontWeight:700,background:"#f0f0ec"}}>{fmtYen(yRecs.reduce((s,r)=>s+Number(r.amount),0))}</td>
+                      {yUsedCats.map(c=><td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(yCatTotals[c])}</td>)}
+                      <td style={{...S.td,fontWeight:700,background:"#f0f0ec"}}>{fmtYen(yTotal)}</td>
                     </tr>
                   </tbody>
                 </table>
