@@ -600,6 +600,44 @@ function TodayDetailModal({ date, records, catColors, onClose }) {
   );
 }
 
+// ── WeekDetailModal ───────────────────────────────────────────────────────────
+function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
+  const total = records.reduce((s,r)=>s+Number(r.amount),0);
+  const cats = Array.from(new Set(records.map(r=>r.category).filter(Boolean)));
+  const catTotals = {}; cats.forEach(c=>{catTotals[c]=records.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
+  const sorted = cats.slice().sort((a,b)=>catTotals[b]-catTotals[a]);
+  const fmtShort = s => s.slice(5).replace("-","/");
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>{fmtShort(monStr)}〜{fmtShort(sunStr)} 今週の内訳</h3>
+          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        {total===0 ? (
+          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+        ) : (
+          <Fragment>
+            <div style={{marginBottom:8}}>
+              <DonutChart items={sorted.map(c=>({key:c,label:c,value:catTotals[c]}))} colors={catColors} total={total} />
+            </div>
+            <div style={{marginTop:10}}>
+              {sorted.map(c=>(
+                <div key={c} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid #f0f0ec"}}>
+                  <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"#aaa",flexShrink:0,display:"inline-block"}} />
+                  <span style={{fontSize:13,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+          </Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, on, color, onChange }) {
   return (
@@ -639,6 +677,7 @@ export default function App() {
   const [expDate, setExpDate]   = useState(null);
   const [expCat, setExpCat]     = useState(null);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
+  const [weekDetailRange, setWeekDetailRange] = useState(null);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
   const writing = useRef(false);
@@ -910,7 +949,7 @@ export default function App() {
                       <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
                     </div>
-                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setWeekDetailRange({monStr,sunStr})}>
                       <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週合計</div>
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekTotal)}</div>
                     </div>
@@ -1406,6 +1445,7 @@ export default function App() {
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
       {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
+      {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
