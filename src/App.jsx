@@ -892,10 +892,10 @@ export default function App() {
               const diffToMon = (dow===0 ? 6 : dow-1);
               const monDate = new Date(now); monDate.setDate(now.getDate()-diffToMon);
               const monStr = monDate.getFullYear()+"-"+pad(monDate.getMonth()+1)+"-"+pad(monDate.getDate());
-              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=today; });
+              const sunDate = new Date(monDate); sunDate.setDate(monDate.getDate()+6);
+              const sunStr = sunDate.getFullYear()+"-"+pad(sunDate.getMonth()+1)+"-"+pad(sunDate.getDate());
+              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=sunStr; });
               const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
-              const weekDays = new Set(weekRecs.map(r=>normDate(r.date))).size;
-              const weekAvg = weekDays>0 ? Math.round(weekTotal/weekDays) : 0;
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
                   <div style={{background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
@@ -911,8 +911,8 @@ export default function App() {
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
                     </div>
                     <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週平均</div>
-                      <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekAvg)}</div>
+                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週合計</div>
+                      <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekTotal)}</div>
                     </div>
                   </div>
                 </div>
