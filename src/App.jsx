@@ -811,7 +811,7 @@ export default function App() {
   const prevYear  = vMonth===1 ? vYear-1 : vYear;
   const csStr = prevYear+"-"+pad(prevMonth)+"-19";
   const ceStr = vYear+"-"+pad(vMonth)+"-18";
-  const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr&&!r.isBiz; });
+  const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr; });
   const mondayOf = d => { const dt=new Date(d); const diff=dt.getDay()===0?6:dt.getDay()-1; const m=new Date(dt); m.setDate(dt.getDate()-diff); return m.getFullYear()+"-"+pad(m.getMonth()+1)+"-"+pad(m.getDate()); };
   const weekRange = monStr => { const s=new Date(monStr); s.setDate(s.getDate()+6); const sunStr=s.getFullYear()+"-"+pad(s.getMonth()+1)+"-"+pad(s.getDate()); return { sunStr, label: monStr.slice(5).replace("-","/")+"〜"+sunStr.slice(5).replace("-","/") }; };
   const byWeek = {}; mRecs.forEach(r=>{ const d=normDate(r.date); const wk=mondayOf(d); if(!byWeek[wk])byWeek[wk]={}; byWeek[wk][r.category]=(byWeek[wk][r.category]||0)+Number(r.amount); });
@@ -821,6 +821,8 @@ export default function App() {
   const mNormalTotal = mTotal - mSpecialTotal;
   const usedCats = cats.filter(c=>mRecs.some(r=>r.category===c));
   const catTotals = {}; usedCats.forEach(c=>{catTotals[c]=mRecs.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
+  const uncatRecs = mRecs.filter(r=>!cats.includes(r.category));
+  const uncatTotal = uncatRecs.reduce((s,r)=>s+Number(r.amount),0);
 
   // 年間データ
   // 年間：各月を19日〜翌月18日のサイクルで集計
@@ -829,7 +831,6 @@ export default function App() {
   const cycleEnd   = (y,m) => y+"-"+pad(m)+"-18";
   const byMonth = {}; for(let m=1;m<=12;m++) byMonth[m]={};
   records.forEach(r=>{
-    if(r.isBiz) return;
     const d=normDate(r.date);
     for(let m=1;m<=12;m++){
       if(d>=cycleStart(vYear,m)&&d<=cycleEnd(vYear,m)){
@@ -840,7 +841,7 @@ export default function App() {
   });
   const yRecs = records.filter(r=>{
     const d=normDate(r.date);
-    return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12)&&!r.isBiz;
+    return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12);
   });
   const yUsedCats = cats.filter(c=>Object.values(byMonth).some(m=>m[c]));
 
@@ -943,7 +944,7 @@ export default function App() {
               ))}
             </div>
             {mTotal>0 && (()=>{
-              const todayTotal = records.filter(r=>normDate(r.date)===today&&!r.isBiz).reduce((s,r)=>s+Number(r.amount),0);
+              const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
               const now = new Date();
               const dow = now.getDay(); // 0=Sun,1=Mon,...
               const diffToMon = (dow===0 ? 6 : dow-1);
@@ -951,7 +952,7 @@ export default function App() {
               const monStr = monDate.getFullYear()+"-"+pad(monDate.getMonth()+1)+"-"+pad(monDate.getDate());
               const sunDate = new Date(monDate); sunDate.setDate(monDate.getDate()+6);
               const sunStr = sunDate.getFullYear()+"-"+pad(sunDate.getMonth()+1)+"-"+pad(sunDate.getDate());
-              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=sunStr&&!r.isBiz; });
+              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=sunStr; });
               const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
@@ -1095,8 +1096,8 @@ export default function App() {
               {mTotal>0 && (
                 <div style={{marginBottom:8}}>
                   <DonutChart
-                    items={usedCats.map(c=>({key:c,label:c,value:catTotals[c]}))}
-                    colors={catColors}
+                    items={[...usedCats.map(c=>({key:c,label:c,value:catTotals[c]})), ...(uncatTotal>0?[{key:"__uncat__",label:"未分類",value:uncatTotal}]:[])]}
+                    colors={{...catColors,__uncat__:"#9a958a"}}
                     total={mTotal}
                     size={280}
                     thickness={26}
@@ -1108,21 +1109,38 @@ export default function App() {
                 </div>
               )}
               {mTotal>0 && (()=>{
-                const sorted = usedCats.slice().sort((a,b)=>catTotals[b]-catTotals[a]);
-                const rows = [];
-                for(let i=0;i<sorted.length;i+=2) rows.push([sorted[i],sorted[i+1]]);
+                const allKeys = [...usedCats, ...(uncatTotal>0?["__uncat__"]:[])];
+                const totalsMap = {...catTotals, __uncat__:uncatTotal};
+                const sorted = allKeys.slice().sort((a,b)=>totalsMap[b]-totalsMap[a]);
                 return (
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px",marginTop:10}}>
                     {sorted.map(c=>(
-                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
-                        <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c],flexShrink:0,display:"inline-block"}} />
-                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
-                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
+                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0",cursor:c==="__uncat__"?"pointer":"default"}} onClick={c==="__uncat__"?()=>setExpCat(expCat===c?null:c):undefined}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:c==="__uncat__"?"#9a958a":catColors[c],flexShrink:0,display:"inline-block"}} />
+                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c==="__uncat__"?"未分類":c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(totalsMap[c])}</span>
                       </div>
                     ))}
                   </div>
                 );
               })()}
+              {expCat==="__uncat__" && uncatRecs.length>0 && (
+                <div style={{marginTop:10,background:"#f7f7f4",borderRadius:10,padding:"12px 14px",border:"1px solid #eeeee9"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <span style={{fontSize:13,fontWeight:700,color:"#555"}}>未分類の記録（カテゴリー未設定または現在存在しないカテゴリー）</span>
+                    <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:18,padding:"0 2px"}} onClick={()=>setExpCat(null)}>×</button>
+                  </div>
+                  {uncatRecs.map(r=>(
+                    <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid #eaeae5",fontSize:13}}>
+                      <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
+                      <span style={{color:"#444",fontWeight:500,flexShrink:0}}>{r.payee||"—"}</span>
+                      <span style={{fontSize:10,background:"#eeeee9",color:"#888",borderRadius:4,padding:"1px 5px"}}>{r.category?`category: "${r.category}"`:"category未設定"}</span>
+                      {r.isBiz && <span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600}}>事業</span>}
+                      <span style={{fontWeight:700,marginLeft:"auto",flexShrink:0}}>{fmtYen(r.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {mTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
             </div>
 
@@ -1462,8 +1480,8 @@ export default function App() {
       {addFixed   && <AddFixedModal cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} onAdd={item=>{const upd=[...fixed,item];setFixed(upd);saveSetting("fixedCosts",upd);showToast("固定費を追加しました ✓");}} onClose={()=>setAddFixed(false)} />}
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
-      {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today&&!r.isBiz)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
-      {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr&&!r.isBiz;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
+      {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
+      {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
