@@ -344,6 +344,16 @@ function PatternModal({ idx, pattern, cats, catColors, catPayees, bizCats, bizCa
 function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onSave, onClose }) {
   const [r, setR] = useState({...rec});
   const payees = r.category ? (catPayees[r.category]||[]) : [];
+  useEffect(()=>{
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        onSave({...r,amount:Number(r.amount)});
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [r, onSave]);
   return (
     <div style={M.overlay}>
       <div style={{...M.modal,maxHeight:"90vh",overflowY:"auto"}}>
