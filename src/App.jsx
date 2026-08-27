@@ -811,7 +811,7 @@ export default function App() {
   const prevYear  = vMonth===1 ? vYear-1 : vYear;
   const csStr = prevYear+"-"+pad(prevMonth)+"-19";
   const ceStr = vYear+"-"+pad(vMonth)+"-18";
-  const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr; });
+  const mRecs = records.filter(r=>{ const d=normDate(r.date); return d>=csStr&&d<=ceStr&&!r.isBiz; });
   const mondayOf = d => { const dt=new Date(d); const diff=dt.getDay()===0?6:dt.getDay()-1; const m=new Date(dt); m.setDate(dt.getDate()-diff); return m.getFullYear()+"-"+pad(m.getMonth()+1)+"-"+pad(m.getDate()); };
   const weekRange = monStr => { const s=new Date(monStr); s.setDate(s.getDate()+6); const sunStr=s.getFullYear()+"-"+pad(s.getMonth()+1)+"-"+pad(s.getDate()); return { sunStr, label: monStr.slice(5).replace("-","/")+"〜"+sunStr.slice(5).replace("-","/") }; };
   const byWeek = {}; mRecs.forEach(r=>{ const d=normDate(r.date); const wk=mondayOf(d); if(!byWeek[wk])byWeek[wk]={}; byWeek[wk][r.category]=(byWeek[wk][r.category]||0)+Number(r.amount); });
@@ -829,6 +829,7 @@ export default function App() {
   const cycleEnd   = (y,m) => y+"-"+pad(m)+"-18";
   const byMonth = {}; for(let m=1;m<=12;m++) byMonth[m]={};
   records.forEach(r=>{
+    if(r.isBiz) return;
     const d=normDate(r.date);
     for(let m=1;m<=12;m++){
       if(d>=cycleStart(vYear,m)&&d<=cycleEnd(vYear,m)){
@@ -839,7 +840,7 @@ export default function App() {
   });
   const yRecs = records.filter(r=>{
     const d=normDate(r.date);
-    return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12);
+    return d>=cycleStart(vYear,1)&&d<=cycleEnd(vYear,12)&&!r.isBiz;
   });
   const yUsedCats = cats.filter(c=>Object.values(byMonth).some(m=>m[c]));
 
@@ -942,7 +943,7 @@ export default function App() {
               ))}
             </div>
             {mTotal>0 && (()=>{
-              const todayTotal = records.filter(r=>normDate(r.date)===today).reduce((s,r)=>s+Number(r.amount),0);
+              const todayTotal = records.filter(r=>normDate(r.date)===today&&!r.isBiz).reduce((s,r)=>s+Number(r.amount),0);
               const now = new Date();
               const dow = now.getDay(); // 0=Sun,1=Mon,...
               const diffToMon = (dow===0 ? 6 : dow-1);
@@ -950,7 +951,7 @@ export default function App() {
               const monStr = monDate.getFullYear()+"-"+pad(monDate.getMonth()+1)+"-"+pad(monDate.getDate());
               const sunDate = new Date(monDate); sunDate.setDate(monDate.getDate()+6);
               const sunStr = sunDate.getFullYear()+"-"+pad(sunDate.getMonth()+1)+"-"+pad(sunDate.getDate());
-              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=sunStr; });
+              const weekRecs = records.filter(r=>{ const d=normDate(r.date); return d>=monStr&&d<=sunStr&&!r.isBiz; });
               const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
@@ -1461,8 +1462,8 @@ export default function App() {
       {addFixed   && <AddFixedModal cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} onAdd={item=>{const upd=[...fixed,item];setFixed(upd);saveSetting("fixedCosts",upd);showToast("固定費を追加しました ✓");}} onClose={()=>setAddFixed(false)} />}
       {editFixed  && <FixedEditor fixed={fixed} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors} bizPayees={bizPayees} onSave={l=>{setFixed(l);saveSetting("fixedCosts",l);}} onClose={()=>setEditFixed(false)} />}
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
-      {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
-      {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
+      {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today&&!r.isBiz)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
+      {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr&&!r.isBiz;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
