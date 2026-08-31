@@ -704,6 +704,42 @@ function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
   );
 }
 
+// ── CategoryBreakdownModal ────────────────────────────────────────────────────
+function CategoryBreakdownModal({ title, records, isUncat, onBulkRecat, onClose }) {
+  const total = records.reduce((s,r)=>s+Number(r.amount),0);
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>{title}</h3>
+          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        {isUncat && onBulkRecat && (
+          <button style={{...S.editLink,display:"block",marginBottom:10}} onClick={onBulkRecat}>全期間の未分類をまとめて編集 →</button>
+        )}
+        {records.length===0 ? (
+          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+        ) : (
+          <Fragment>
+            {records.map(r=>(
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 0",borderBottom:"1px solid #f0f0ec",fontSize:13}}>
+                <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
+                <span style={{color:"#1a1a1a",fontWeight:600,flexShrink:0}}>{r.payee||"—"}</span>
+                {isUncat && <span style={{fontSize:10,background:"#eeeee9",color:"#888",borderRadius:4,padding:"1px 5px"}}>{r.category?`category: "${r.category}"`:"category未設定"}</span>}
+                {r.memo && <span style={{color:"#aaa",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>「{r.memo}」</span>}
+                {r.isFixed && <span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>固定</span>}
+                {r.isBiz && <span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>事業</span>}
+                <span style={{fontWeight:700,marginLeft:"auto",flexShrink:0}}>{fmtYen(r.amount)}</span>
+              </div>
+            ))}
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+          </Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, on, color, onChange }) {
   return (
@@ -744,6 +780,7 @@ export default function App() {
   const [expCat, setExpCat]     = useState(null);
   const [expBzCat, setExpBzCat] = useState(null);
   const [expYCat, setExpYCat]   = useState(null);
+  const [expYMonthCat, setExpYMonthCat] = useState(null);
   const [showBulkRecat, setShowBulkRecat] = useState(false);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
@@ -1177,7 +1214,7 @@ export default function App() {
                     thickness={26}
                     radius={36}
                     showLabels
-                    onSegClick={c=>setExpCat(expCat===c?null:c)}
+                    onSegClick={c=>setExpCat(c)}
                     activeKey={expCat}
                   />
                 </div>
@@ -1189,7 +1226,7 @@ export default function App() {
                 return (
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px",marginTop:10}}>
                     {sorted.map(c=>(
-                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0",cursor:c==="__uncat__"?"pointer":"default"}} onClick={c==="__uncat__"?()=>setExpCat(expCat===c?null:c):undefined}>
+                      <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0",cursor:"pointer"}} onClick={()=>setExpCat(c)}>
                         <span style={{width:8,height:8,borderRadius:"50%",background:c==="__uncat__"?"#9a958a":catColors[c],flexShrink:0,display:"inline-block"}} />
                         <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c==="__uncat__"?"未分類":c}</span>
                         <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(totalsMap[c])}</span>
@@ -1198,24 +1235,6 @@ export default function App() {
                   </div>
                 );
               })()}
-              {expCat==="__uncat__" && uncatRecs.length>0 && (
-                <div style={{marginTop:10,background:"#f7f7f4",borderRadius:10,padding:"12px 14px",border:"1px solid #eeeee9"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                    <span style={{fontSize:13,fontWeight:700,color:"#555"}}>未分類の記録（カテゴリー未設定または現在存在しないカテゴリー）</span>
-                    <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:18,padding:"0 2px"}} onClick={()=>setExpCat(null)}>×</button>
-                  </div>
-                  <button style={{...S.editLink,display:"block",marginBottom:8}} onClick={()=>setShowBulkRecat(true)}>全期間の未分類をまとめて編集 →</button>
-                  {uncatRecs.map(r=>(
-                    <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid #eaeae5",fontSize:13}}>
-                      <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
-                      <span style={{color:"#444",fontWeight:500,flexShrink:0}}>{r.payee||"—"}</span>
-                      <span style={{fontSize:10,background:"#eeeee9",color:"#888",borderRadius:4,padding:"1px 5px"}}>{r.category?`category: "${r.category}"`:"category未設定"}</span>
-                      {r.isBiz && <span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600}}>事業</span>}
-                      <span style={{fontWeight:700,marginLeft:"auto",flexShrink:0}}>{fmtYen(r.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
               {mTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
             </div>
 
@@ -1290,9 +1309,9 @@ export default function App() {
         {tab==="yearly" && (
           <div style={S.card}>
             <div style={S.navRow}>
-              <button style={S.arrowBtn} onClick={()=>setVYear(y=>y-1)}>◀</button>
+              <button style={S.arrowBtn} onClick={()=>{setExpYCat(null);setExpYMonthCat(null);setVYear(y=>y-1);}}>◀</button>
               <h2 style={S.cardTitle}>{vYear}年</h2>
-              <button style={S.arrowBtn} onClick={()=>setVYear(y=>y+1)}>▶</button>
+              <button style={S.arrowBtn} onClick={()=>{setExpYCat(null);setExpYMonthCat(null);setVYear(y=>y+1);}}>▶</button>
             </div>
             <div style={S.summaryBox}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
@@ -1335,8 +1354,8 @@ export default function App() {
                   <thead>
                     <tr>
                       <th style={{...S.th,...S.thFix}}>月</th>
+                      <th style={{...S.th,...S.thFix2}}>合計</th>
                       {yUsedCats.map(c=><th key={c} style={S.th}><span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:catColors[c],marginRight:4,verticalAlign:"middle"}} />{c}</th>)}
-                      <th style={{...S.th,background:"#f0f0ec",color:"#333"}}>合計</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1344,20 +1363,30 @@ export default function App() {
                       const m=mi+1;
                       const tot=Object.values(byMonth[m]).reduce((a,b)=>a+b,0);
                       const isCur=vYear===new Date().getFullYear()&&m===new Date().getMonth()+1;
+                      const rowBg = isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb";
                       return (
                         <tr key={m} style={{...(mi%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isCur?{background:"#eef4fb"}:{})}}>
-                          <td style={{...S.td,...S.thFix,fontWeight:600,background:isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb"}}>
+                          <td style={{...S.td,...S.thFix,fontWeight:600,background:rowBg}}>
                             {ml}{isCur&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今月</span>}
                           </td>
-                          {yUsedCats.map(c=><td key={c} style={S.td}>{byMonth[m][c]?fmtYen(byMonth[m][c]):<span style={{color:"#d0d0cb"}}>—</span>}</td>)}
-                          <td style={{...S.td,fontWeight:600,background:"#fafaf8"}}>{tot>0?fmtYen(tot):<span style={{color:"#d0d0cb"}}>—</span>}</td>
+                          <td style={{...S.td,...S.thFix2,fontWeight:600,background:rowBg}}>{tot>0?fmtYen(tot):<span style={{color:"#d0d0cb"}}>—</span>}</td>
+                          {yUsedCats.map(c=>{
+                            const amt=byMonth[m][c];
+                            const ck=m+"|"+c;
+                            return (
+                              <td key={c} style={{...S.td,...(amt?{cursor:"pointer"}:{}),...(expYMonthCat===ck?{background:catColors[c]+"22"}:{})}}
+                                onClick={()=>{ if(amt) setExpYMonthCat(expYMonthCat===ck?null:ck); }}>
+                                {amt?fmtYen(amt):<span style={{color:"#d0d0cb"}}>—</span>}
+                              </td>
+                            );
+                          })}
                         </tr>
                       );
                     })}
                     <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
                       <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>年計</td>
+                      <td style={{...S.td,...S.thFix2,fontWeight:700,background:"#f5f5f0"}}>{fmtYen(yTotal)}</td>
                       {yUsedCats.map(c=><td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(yCatTotals[c])}</td>)}
-                      <td style={{...S.td,fontWeight:700,background:"#f0f0ec"}}>{fmtYen(yTotal)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1611,6 +1640,27 @@ export default function App() {
       {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
       {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
       {showBulkRecat && <BulkRecategorizeModal records={records} cats={cats} catColors={catColors} onApply={bulkAssignCategory} onClose={()=>setShowBulkRecat(false)} />}
+      {expCat && (
+        <CategoryBreakdownModal
+          title={(expCat==="__uncat__"?"未分類":expCat)+" の内訳"}
+          records={expCat==="__uncat__"?uncatRecs:mRecs.filter(r=>r.category===expCat)}
+          isUncat={expCat==="__uncat__"}
+          onBulkRecat={()=>setShowBulkRecat(true)}
+          onClose={()=>setExpCat(null)}
+        />
+      )}
+      {expYMonthCat && (()=>{
+        const [mStr,c] = expYMonthCat.split("|");
+        const m = Number(mStr);
+        const recs = records.filter(r=>{ const d=normDate(r.date); return d>=cycleStart(vYear,m)&&d<=cycleEnd(vYear,m)&&r.category===c; });
+        return (
+          <CategoryBreakdownModal
+            title={vYear+"年 "+MONTHS[m-1]+" "+c+" の内訳"}
+            records={recs}
+            onClose={()=>setExpYMonthCat(null)}
+          />
+        );
+      })()}
       {editPattern!==null && <PatternModal idx={editPattern} pattern={patterns[editPattern]} cats={cats} catColors={catColors} catPayees={catPayees} bizCats={bizCats} bizCatColors={bizCatColors}
         onSave={(i,pat)=>{ const upd=patterns.map((p,j)=>j===i?pat:p); setPatterns(upd); saveSetting("patterns",upd); showToast("パターン"+(i+1)+"を保存しました ✓"); }}
         onDelete={i=>{ const upd=patterns.map((p,j)=>j===i?null:p); setPatterns(upd); saveSetting("patterns",upd); }}
@@ -1653,6 +1703,7 @@ const S = {
   secTitle:  { fontSize:11, fontWeight:700, color:"#aaa", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
   th:        { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3, boxShadow:"0 1px 0 #e8e8e3" },
   thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:100, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
+  thFix2:    { position:"sticky", left:100, zIndex:4, background:"#f0f0ec", minWidth:90, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
   td:        { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid #f2f2ee", fontSize:13, color:"#333", whiteSpace:"nowrap", background:"#fff" },
   fab:       { position:"fixed", bottom:28, right:20, padding:"12px 20px", background:"#4f7cac", color:"#fff", border:"none", borderRadius:28, fontSize:14, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 14px rgba(79,124,172,.4)", zIndex:150, fontFamily:"inherit" },
   toast:     { position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:"#1a1a1a", color:"#fff", padding:"10px 22px", borderRadius:30, fontSize:13, zIndex:300, whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(0,0,0,.2)" },
