@@ -715,6 +715,43 @@ function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
   );
 }
 
+// ── MonthCategoryModal ───────────────────────────────────────────────────────
+function MonthCategoryModal({ year, month, records, catColors, onClose }) {
+  const total = records.reduce((s,r)=>s+Number(r.amount),0);
+  const cats = Array.from(new Set(records.map(r=>r.category).filter(Boolean)));
+  const catTotals = {}; cats.forEach(c=>{catTotals[c]=records.filter(r=>r.category===c).reduce((s,r)=>s+Number(r.amount),0);});
+  const sorted = cats.slice().sort((a,b)=>catTotals[b]-catTotals[a]);
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>{year}年{month}月 カテゴリー内訳</h3>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        {total===0 ? (
+          <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"20px 0",fontSize:14}}>記録はありません</p>
+        ) : (
+          <Fragment>
+            <div style={{marginBottom:8}}>
+              <DonutChart items={sorted.map(c=>({key:c,label:c,value:catTotals[c]}))} colors={catColors} total={total} />
+            </div>
+            <div style={{marginTop:10}}>
+              {sorted.map(c=>(
+                <div key={c} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid var(--border)"}}>
+                  <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"var(--text-subtle)",flexShrink:0,display:"inline-block"}} />
+                  <span style={{fontSize:13,color:"var(--text-tertiary)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:"var(--text-secondary)",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"var(--text-secondary)"}}>合計 {fmtYen(total)}</div>
+          </Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── CategoryBreakdownModal ────────────────────────────────────────────────────
 function CategoryBreakdownModal({ title, records, isUncat, onBulkRecat, onClose }) {
   const total = records.reduce((s,r)=>s+Number(r.amount),0);
@@ -796,6 +833,7 @@ export default function App() {
   const [showBulkRecat, setShowBulkRecat] = useState(false);
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
+  const [showMonthCatDetail, setShowMonthCatDetail] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
   const writing = useRef(0);
@@ -1131,7 +1169,7 @@ export default function App() {
               const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-                  <div style={{background:"var(--surface-alt)",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                  <div style={{background:"var(--surface-alt)",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setShowMonthCatDetail(true)}>
                     <div style={{fontSize:10,fontWeight:600,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
                     <div style={{fontSize:22,fontWeight:700}}>
                       {fmtYen(mNormalTotal)}
@@ -1703,6 +1741,7 @@ export default function App() {
       {editRec    && <EditModal rec={editRec} cats={cats} catColors={catColors} bizCats={bizCats} bizCatColors={bizCatColors} catPayees={catPayees} onSave={updRecord} onClose={()=>setEditRec(null)} />}
       {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
       {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
+      {showMonthCatDetail && <MonthCategoryModal year={vYear} month={vMonth} records={mRecs} catColors={catColors} onClose={()=>setShowMonthCatDetail(false)} />}
       {showBulkRecat && <BulkRecategorizeModal records={records} cats={cats} catColors={catColors} onApply={bulkAssignCategory} onClose={()=>setShowBulkRecat(false)} />}
       {expCat && (
         <CategoryBreakdownModal
