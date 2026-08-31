@@ -929,12 +929,11 @@ export default function App() {
   const downloadCSV = () => {
     try {
       const rows = [
-        ["日付","カテゴリー","事業カテゴリー","支払い先","金額","メモ"],
+        ["日付","事業カテゴリー","支払い先","金額","メモ"],
         ...[...bzMRecs]
           .sort((a,b)=>normDate(a.date).localeCompare(normDate(b.date)))
           .map(r=>[
             normDate(r.date),
-            r.category||"",
             r.bizCategory||"",
             r.payee||"",
             String(r.amount),
