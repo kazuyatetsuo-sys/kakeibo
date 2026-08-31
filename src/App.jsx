@@ -29,7 +29,18 @@ const pad = n => String(n).padStart(2,"0");
 const fmtYen = n => "¥" + Number(n).toLocaleString();
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
 const normDate = d => { if(!d) return ""; const s=String(d); if(s.includes("T")||s.includes("Z")){ const dt=new Date(s); return dt.getFullYear()+"-"+pad(dt.getMonth()+1)+"-"+pad(dt.getDate()); } return s.slice(0,10); };
-const gasPost = async body => { if(!GAS_URL) return {ok:false}; const r=await fetch(GAS_URL,{method:"POST",body:JSON.stringify(body)}); return r.json(); };
+const gasPost = async body => {
+  if(!GAS_URL) return {ok:false};
+  const r = await fetch(GAS_URL,{method:"POST",body:JSON.stringify(body)});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const res = await r.json();
+  if(!res || res.ok===false) throw new Error((res&&res.error)||"保存に失敗しました");
+  return res;
+};
+
+const PENDING_KEY = "kakeibo_pending_ops";
+const loadPendingOps = () => { try { return JSON.parse(localStorage.getItem(PENDING_KEY)||"[]"); } catch(e) { return []; } };
+const savePendingOps = ops => { try { localStorage.setItem(PENDING_KEY, JSON.stringify(ops)); } catch(e) {} };
 
 // ── TagEditor ─────────────────────────────────────────────────────────────────
 function TagEditor({ title, items, onSave, onClose }) {
@@ -756,6 +767,7 @@ function Toggle({ label, on, color, onChange }) {
 export default function App() {
   const [tab, setTab]           = useState("input");
   const [syncing, setSyncing]   = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const [records, setRecords]   = useState([]);
   const [cats, setCats]         = useState(DEFAULT_CATS);
   const [catPayees, setCatPayees] = useState(DEFAULT_CAT_PAYEES);
@@ -789,18 +801,45 @@ export default function App() {
   const writing = useRef(0);
   const pressTimer = useRef(null);
   const didLongPress = useRef(false);
+  const pendingOps = useRef(loadPendingOps());
 
   const catColors    = {}; cats.forEach((c,i)=>{catColors[c]=PALETTE[i%PALETTE.length];});
   const bizCatColors = {}; bizCats.forEach((c,i)=>{bizCatColors[c]=PALETTE[(i+4)%PALETTE.length];});
 
   const showToast = (msg,dur=2200) => { setToast(msg); setTimeout(()=>setToast(""),dur); };
 
+  const persistPending = () => savePendingOps(pendingOps.current.map(({id,body})=>({id,body})));
+
+  // 前回の失敗分やオフライン中に溜まった未送信の変更をサーバーへ再送信する
+  const flushPending = async () => {
+    if(!GAS_URL) return;
+    const items = pendingOps.current.filter(o=>!o.inFlight);
+    if(items.length===0) return;
+    setSyncing(true);
+    for(const op of items){
+      op.inFlight = true;
+      try {
+        await gasPost(op.body);
+        pendingOps.current = pendingOps.current.filter(o=>o.id!==op.id);
+      } catch(e) {
+        console.warn(e);
+        op.inFlight = false;
+        break; // 順序を保つため、失敗したら以降は次回に回す
+      }
+    }
+    persistPending();
+    setPendingCount(pendingOps.current.length);
+    setSyncing(false);
+  };
+
   const fetchAll = async () => {
     if(!GAS_URL) return;
     setSyncing(true);
+    await flushPending();
     try {
       const res = await (await fetch(GAS_URL+"?action=getAll")).json();
-      if(res.ok && writing.current===0) {
+      // 未送信の変更が残っている間は、サーバーの古いデータで上書きしない
+      if(res.ok && writing.current===0 && pendingOps.current.length===0) {
         if(res.records && res.records.length>0) {
           setRecords(res.records.map(r=>({...r,date:normDate(r.date),amount:Number(r.amount),isFixed:r.isFixed===true||r.isFixed==="TRUE",isBiz:r.isBiz===true||r.isBiz==="TRUE",isSpecial:r.isSpecial===true||r.isSpecial==="TRUE",bizCategory:r.bizCategory||""})));
         }
@@ -818,9 +857,18 @@ export default function App() {
 
   useEffect(()=>{
     if(!GAS_URL) return;
+    if(pendingOps.current.length>0){ setPendingCount(pendingOps.current.length); }
     fetchAll();
     const t = setInterval(fetchAll, 30000);
-    return ()=>clearInterval(t);
+    const onOnline = () => fetchAll();
+    window.addEventListener("online", onOnline);
+    return ()=>{ clearInterval(t); window.removeEventListener("online", onOnline); };
+  },[]);
+
+  useEffect(()=>{
+    const handler = e => { if(pendingOps.current.length>0){ e.preventDefault(); e.returnValue=""; } };
+    window.addEventListener("beforeunload", handler);
+    return ()=>window.removeEventListener("beforeunload", handler);
   },[]);
 
   useEffect(()=>{
@@ -836,12 +884,23 @@ export default function App() {
   }, [tab, form, records, fixed, editRec]);
 
   const sync = async body => {
-    if(!GAS_URL) return;
+    if(!GAS_URL) return true;
+    const op = { id: Date.now()+"_"+Math.random().toString(36).slice(2), body, inFlight:true };
+    pendingOps.current = [...pendingOps.current, op];
+    persistPending();
+    setPendingCount(pendingOps.current.length);
     writing.current += 1;
     setSyncing(true);
-    try { await gasPost(body); } catch(e){ console.warn(e); }
+    let ok = false;
+    try { await gasPost(body); ok = true; } catch(e){ console.warn(e); }
+    if(ok) pendingOps.current = pendingOps.current.filter(o=>o.id!==op.id);
+    else op.inFlight = false;
+    persistPending();
+    setPendingCount(pendingOps.current.length);
+    if(!ok) showToast("⚠ 保存に失敗しました。オフラインの可能性があります。接続後に自動で再送信します", 6000);
     writing.current = Math.max(0, writing.current-1);
     setSyncing(false);
+    return ok;
   };
 
   const saveSetting = (key,val) => { if(GAS_URL) sync({action:"saveAllSettings",settings:{[key]:val}}); };
@@ -1016,6 +1075,11 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={S.logo}>家計簿</span>
           {syncing && <span style={S.sync}>同期中...</span>}
+          {pendingCount>0 && (
+            <span style={S.syncError} onClick={flushPending} title="タップして再送信">
+              ⚠ 未保存{pendingCount}件
+            </span>
+          )}
         </div>
         <nav style={S.nav}>
           {[["input","入力"],["monthly","月間"],["yearly","年間"],["biz","事業経費"],["fixed","固定費"],["card","Card"]].map(([k,l])=>(
@@ -1683,6 +1747,7 @@ const S = {
   header:    { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", background:"#fff", borderBottom:"1px solid #e8e8e5", position:"sticky", top:0, zIndex:100, gap:6, flexWrap:"wrap" },
   logo:      { fontSize:16, fontWeight:700, letterSpacing:2 },
   sync:      { fontSize:11, color:"#4f7cac", background:"#eef4fb", borderRadius:10, padding:"2px 8px" },
+  syncError: { fontSize:11, color:"#c0392b", background:"#fdecea", borderRadius:10, padding:"2px 8px", cursor:"pointer", fontWeight:700 },
   nav:       { display:"flex", gap:2, flexWrap:"wrap" },
   navBtn:    { padding:"5px 8px", border:"none", background:"transparent", borderRadius:20, fontSize:11, cursor:"pointer", color:"#555", fontFamily:"inherit" },
   navOn:     { background:"#1a1a1a", color:"#fff" },
