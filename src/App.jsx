@@ -70,7 +70,7 @@ function TagEditor({ title, items, onSave, onClose }) {
         <h3 style={M.mTitle}>{title}</h3>
         <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:14}}>
           {list.map((item,i) => (
-            <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",background:"#f7f7f4",borderRadius:8}}>
+            <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",background:"var(--surface-alt)",borderRadius:8}}>
               {editIdx===i ? (
                 <input autoFocus style={{...M.inp,flex:1,padding:"4px 8px"}} value={editVal}
                   onChange={e=>setEditVal(e.target.value)}
@@ -186,19 +186,19 @@ function AddFixedModal({ cats, catColors, catPayees, bizCats, bizCatColors, onAd
         </div>
         {payeesToShow.length>0 && (
           <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
-            {payeesToShow.map(p=><button key={p} style={{...M.chip,...(f.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setF(v=>({...v,payee:p}))}>{p}</button>)}
+            {payeesToShow.map(p=><button key={p} style={{...M.chip,...(f.payee===p?{background:"var(--ink-bg)",color:"#fff",borderColor:"var(--ink-bg)"}:{})}} onClick={()=>setF(v=>({...v,payee:p}))}>{p}</button>)}
           </div>
         )}
         <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:6}} placeholder="支払い先" value={f.payee} onChange={e=>setF(v=>({...v,payee:e.target.value}))} />
         <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="メモ（任意）" value={f.memo} onChange={e=>setF(v=>({...v,memo:e.target.value}))} />
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer",marginBottom:8}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
-          <span style={{fontSize:13,color:"#555"}}>事業経費</span>
-          <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"var(--surface-alt)",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer",marginBottom:8}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
+          <span style={{fontSize:13,color:"var(--text-tertiary)"}}>事業経費</span>
+          <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"var(--border-strong)",position:"relative",flexShrink:0}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:"var(--surface)",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
           </div>
         </div>
         {f.isBiz && (
-          <div style={{background:"#edfaf5",borderRadius:10,padding:10,border:"1px solid #b2e0d0",marginBottom:8}}>
+          <div style={{background:"var(--tint-green)",borderRadius:10,padding:10,border:"1px solid #b2e0d0",marginBottom:8}}>
             <label style={{...M.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
             <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
               {bizCats.map(c=><button key={c} style={{...M.chip,...(f.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}} onClick={()=>setF(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>{c}</button>)}
@@ -223,11 +223,11 @@ function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors,
     <div style={M.overlay}>
       <div style={{...M.modal,maxWidth:520,maxHeight:"90vh",overflowY:"auto"}}>
         <h3 style={M.mTitle}>固定費の管理</h3>
-        {list.length===0 && <p style={{color:"#bbb",fontSize:13,textAlign:"center",padding:"16px 0"}}>固定費がありません</p>}
+        {list.length===0 && <p style={{color:"var(--text-subtle)",fontSize:13,textAlign:"center",padding:"16px 0"}}>固定費がありません</p>}
         {list.map((item,i) => (
           <div key={item.id}>
             {editIdx===i ? (
-              <div style={{padding:"12px",background:"#f7f7f4",borderRadius:10,marginBottom:8,border:"1px solid #eee"}}>
+              <div style={{padding:"12px",background:"var(--surface-alt)",borderRadius:10,marginBottom:8,border:"1px solid var(--border)"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                   <input style={M.inp} placeholder="名称" value={item.name} onChange={e=>upd(i,{name:e.target.value})} />
                   <input style={M.inp} type="number" placeholder="金額" value={item.amount} onChange={e=>upd(i,{amount:e.target.value})} />
@@ -241,20 +241,20 @@ function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors,
                 </div>
                 {(catPayees[item.category]||[]).length>0 && (
                   <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
-                    {(catPayees[item.category]||[]).map(p=><button key={p} style={{...M.chip,...(item.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>upd(i,{payee:p})}>{p}</button>)}
+                    {(catPayees[item.category]||[]).map(p=><button key={p} style={{...M.chip,...(item.payee===p?{background:"var(--ink-bg)",color:"#fff",borderColor:"var(--ink-bg)"}:{})}} onClick={()=>upd(i,{payee:p})}>{p}</button>)}
                   </div>
                 )}
                 <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:6}} placeholder="支払い先" value={item.payee||""} onChange={e=>upd(i,{payee:e.target.value})} />
                 <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="メモ" value={item.memo||""} onChange={e=>upd(i,{memo:e.target.value})} />
                 {/* 事業経費トグル */}
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fff",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer",marginBottom:8}} onClick={()=>upd(i,{isBiz:!item.isBiz,bizCategory:""})}>
-                  <span style={{fontSize:13,color:"#555"}}>事業経費</span>
-                  <div style={{width:36,height:22,borderRadius:11,background:item.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0,transition:"background .2s"}}>
-                    <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:item.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"var(--surface)",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer",marginBottom:8}} onClick={()=>upd(i,{isBiz:!item.isBiz,bizCategory:""})}>
+                  <span style={{fontSize:13,color:"var(--text-tertiary)"}}>事業経費</span>
+                  <div style={{width:36,height:22,borderRadius:11,background:item.isBiz?"#3aaa82":"var(--border-strong)",position:"relative",flexShrink:0,transition:"background .2s"}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"var(--surface)",position:"absolute",top:2,left:item.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
                   </div>
                 </div>
                 {item.isBiz && (
-                  <div style={{background:"#edfaf5",borderRadius:10,padding:10,border:"1px solid #b2e0d0",marginBottom:8}}>
+                  <div style={{background:"var(--tint-green)",borderRadius:10,padding:10,border:"1px solid #b2e0d0",marginBottom:8}}>
                     <label style={{...M.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                       {bizCats.map(c=><button key={c} style={{...M.chip,...(item.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}} onClick={()=>upd(i,{bizCategory:item.bizCategory===c?"":c})}>{c}</button>)}
@@ -266,19 +266,19 @@ function FixedEditor({ fixed, cats, catColors, catPayees, bizCats, bizCatColors,
                 </div>
               </div>
             ) : (
-              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
-                <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"#aaa",display:"inline-block",flexShrink:0}} />
+              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+                <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"var(--text-subtle)",display:"inline-block",flexShrink:0}} />
                 <div style={{flex:1}}>
                   <div style={{fontSize:14,fontWeight:600}}>{item.name}</div>
-                  <div style={{fontSize:11,color:"#aaa",marginTop:2}}>
+                  <div style={{fontSize:11,color:"var(--text-subtle)",marginTop:2}}>
                     {item.category}
                     {item.isBiz&&item.bizCategory&&<span style={{marginLeft:4,color:"#3aaa82"}}>{item.bizCategory}</span>}
                     {item.payee?" · "+item.payee:""} · 毎月{item.day}日
-                    {item.isBiz&&<span style={{marginLeft:4,fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px"}}>事業経費</span>}
+                    {item.isBiz&&<span style={{marginLeft:4,fontSize:10,background:"var(--tint-green)",color:"#3aaa82",borderRadius:4,padding:"1px 5px"}}>事業経費</span>}
                   </div>
                 </div>
                 <span style={{fontSize:14,fontWeight:700}}>{fmtYen(item.amount)}</span>
-                <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#888",cursor:"pointer",fontSize:11,padding:"2px 7px"}} onClick={()=>setEditIdx(i)}>編集</button>
+                <button style={{background:"none",border:"1px solid var(--border)",borderRadius:6,color:"var(--text-faint)",cursor:"pointer",fontSize:11,padding:"2px 7px"}} onClick={()=>setEditIdx(i)}>編集</button>
                 <button style={M.xBtn} onClick={()=>setList(list.filter((_,j)=>j!==i))}>×</button>
               </div>
             )}
@@ -317,18 +317,18 @@ function PatternModal({ idx, pattern, cats, catColors, catPayees, bizCats, bizCa
         </div>
         {payeesToShow.length>0 && (
           <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}}>
-            {payeesToShow.map(p=><button key={p} style={{...M.chip,...(f.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setF(v=>({...v,payee:p}))}>{p}</button>)}
+            {payeesToShow.map(p=><button key={p} style={{...M.chip,...(f.payee===p?{background:"var(--ink-bg)",color:"#fff",borderColor:"var(--ink-bg)"}:{})}} onClick={()=>setF(v=>({...v,payee:p}))}>{p}</button>)}
           </div>
         )}
         <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:8}} placeholder="支払い先（直接入力）" value={f.payee} onChange={e=>setF(v=>({...v,payee:e.target.value}))} />
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer",marginBottom:8}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
-          <span style={{fontSize:13,color:"#555"}}>事業経費</span>
-          <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0,transition:"background .2s"}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"var(--surface-alt)",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer",marginBottom:8}} onClick={()=>setF(v=>({...v,isBiz:!v.isBiz,bizCategory:""}))}>
+          <span style={{fontSize:13,color:"var(--text-tertiary)"}}>事業経費</span>
+          <div style={{width:36,height:22,borderRadius:11,background:f.isBiz?"#3aaa82":"var(--border-strong)",position:"relative",flexShrink:0,transition:"background .2s"}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:"var(--surface)",position:"absolute",top:2,left:f.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
           </div>
         </div>
         {f.isBiz && (
-          <div style={{background:"#edfaf5",borderRadius:10,padding:12,border:"1px solid #b2e0d0",marginBottom:8}}>
+          <div style={{background:"var(--tint-green)",borderRadius:10,padding:12,border:"1px solid #b2e0d0",marginBottom:8}}>
             <label style={{...M.label,color:"#3aaa82",marginTop:0}}>事業カテゴリー</label>
             <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
               {bizCats.map(c=><button key={c} style={{...M.chip,...(f.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}} onClick={()=>setF(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>{c}</button>)}
@@ -385,21 +385,21 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
           <div>
             <label style={M.label}>支払い先</label>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}}>
-              {payees.map(p => <button key={p} style={{...M.chip,...(r.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setR(v=>({...v,payee:p}))}>{p}</button>)}
+              {payees.map(p => <button key={p} style={{...M.chip,...(r.payee===p?{background:"var(--ink-bg)",color:"#fff",borderColor:"var(--ink-bg)"}:{})}} onClick={()=>setR(v=>({...v,payee:p}))}>{p}</button>)}
             </div>
           </div>
         )}
         <input style={{...M.inp,width:"100%",boxSizing:"border-box",marginBottom:4}} placeholder="支払い先を直接入力" value={r.payee||""} onChange={e=>setR(v=>({...v,payee:e.target.value}))} />
         <div style={{margin:"10px 0"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer"}} onClick={()=>setR(v=>({...v,isBiz:!v.isBiz,bizCategory:v.isBiz?"":v.bizCategory}))}>
-            <span style={{fontSize:13,color:"#333"}}>事業経費</span>
-            <div style={{width:36,height:22,borderRadius:11,background:r.isBiz?"#3aaa82":"#ddd",position:"relative",flexShrink:0}}>
-              <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:r.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"var(--surface-alt)",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer"}} onClick={()=>setR(v=>({...v,isBiz:!v.isBiz,bizCategory:v.isBiz?"":v.bizCategory}))}>
+            <span style={{fontSize:13,color:"var(--text-secondary)"}}>事業経費</span>
+            <div style={{width:36,height:22,borderRadius:11,background:r.isBiz?"#3aaa82":"var(--border-strong)",position:"relative",flexShrink:0}}>
+              <div style={{width:18,height:18,borderRadius:"50%",background:"var(--surface)",position:"absolute",top:2,left:r.isBiz?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
             </div>
           </div>
         </div>
         {r.isBiz && (
-          <div style={{background:"#edfaf5",borderRadius:10,padding:12,border:"1px solid #b2e0d0",marginBottom:8}}>
+          <div style={{background:"var(--tint-green)",borderRadius:10,padding:12,border:"1px solid #b2e0d0",marginBottom:8}}>
             <label style={{...M.label,color:"#3aaa82",marginTop:0}}>事業カテゴリー</label>
             <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
               {bizCats.map(c => <button key={c} style={{...M.chip,...(r.bizCategory===c?{background:bizCatColors[c],color:"#fff",borderColor:bizCatColors[c]}:{borderColor:"#6dbf9e",color:"#3aaa82"})}} onClick={()=>setR(v=>({...v,bizCategory:v.bizCategory===c?"":c}))}>{c}</button>)}
@@ -408,7 +408,7 @@ function EditModal({ rec, cats, catColors, bizCats, bizCatColors, catPayees, onS
         )}
         <label style={M.label}>メモ</label>
         <input style={{...M.inp,width:"100%",boxSizing:"border-box"}} placeholder="メモ" value={r.memo||""} onChange={e=>setR(v=>({...v,memo:e.target.value}))} />
-        <div style={{...M.btns,marginTop:16,position:"sticky",bottom:0,background:"#fff",paddingTop:12,paddingBottom:8,marginLeft:-24,marginRight:-24,paddingLeft:24,paddingRight:24,borderTop:"1px solid #f0f0ec"}}>
+        <div style={{...M.btns,marginTop:16,position:"sticky",bottom:0,background:"var(--surface)",paddingTop:12,paddingBottom:8,marginLeft:-24,marginRight:-24,paddingLeft:24,paddingRight:24,borderTop:"1px solid var(--border)"}}>
           <button style={M.cancel} onClick={onClose}>キャンセル</button>
           <button style={M.save} onClick={()=>onSave({...r,amount:Number(r.amount)})}>保存</button>
         </div>
@@ -435,21 +435,21 @@ function FixedCandidateRow({ item, catColors, isRecorded, viewYear, viewMonth, o
   const [date, setDate] = useState(initDate());
   const [open, setOpen] = useState(false);
   return (
-    <div style={{border:"1px solid #eeeee9",borderRadius:12,marginBottom:8,overflow:"hidden"}}>
+    <div style={{border:"1px solid var(--border)",borderRadius:12,marginBottom:8,overflow:"hidden"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px"}}>
-        <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"#aaa",display:"inline-block",flexShrink:0}} />
+        <span style={{width:10,height:10,borderRadius:"50%",background:catColors[item.category]||"var(--text-subtle)",display:"inline-block",flexShrink:0}} />
         <div style={{flex:1}}>
           <div style={{fontWeight:600,fontSize:14}}>{item.name}</div>
-          <div style={{fontSize:11,color:"#aaa",marginTop:2}}>{item.category}{item.payee?" · "+item.payee:""}</div>
+          <div style={{fontSize:11,color:"var(--text-subtle)",marginTop:2}}>{item.category}{item.payee?" · "+item.payee:""}</div>
         </div>
         <div style={{fontSize:15,fontWeight:700,marginRight:8}}>{fmtYen(item.amount)}</div>
         {isRecorded
           ? <span style={{fontSize:12,color:"#6dbf9e",fontWeight:600,padding:"4px 10px",border:"1px solid #6dbf9e",borderRadius:20}}>記録済み ✓</span>
-          : <button style={{padding:"6px 14px",background:"#1a1a1a",color:"#fff",border:"none",borderRadius:20,fontSize:13,fontWeight:600,cursor:"pointer"}} onClick={()=>setOpen(o=>!o)}>{open?"閉じる":"記録する"}</button>
+          : <button style={{padding:"6px 14px",background:"var(--ink-bg)",color:"#fff",border:"none",borderRadius:20,fontSize:13,fontWeight:600,cursor:"pointer"}} onClick={()=>setOpen(o=>!o)}>{open?"閉じる":"記録する"}</button>
         }
       </div>
       {open && !isRecorded && (
-        <div style={{background:"#f7f7f4",borderTop:"1px solid #eeeee9",padding:"12px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+        <div style={{background:"var(--surface-alt)",borderTop:"1px solid var(--border)",padding:"12px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
           <div style={{flex:"1 1 120px"}}>
             <label style={{...M.label,marginTop:0}}>日付</label>
             <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...M.inp,width:"100%",boxSizing:"border-box"}} />
@@ -472,38 +472,38 @@ function MonthlyList({ mRecs, today, catColors, bizCatColors, onEdit, onDelete }
   const dates = Object.keys(grouped).sort().reverse();
   return (
     <div style={{marginTop:20}}>
-      <p style={{fontSize:11,fontWeight:700,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:12}}>当月の記録一覧（{mRecs.length}件）</p>
+      <p style={{fontSize:11,fontWeight:700,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase",marginBottom:12}}>当月の記録一覧（{mRecs.length}件）</p>
       {dates.map(date=>{
         const dow = DAYS[new Date(date).getDay()];
         const isSun = new Date(date).getDay()===0;
         const isSat = new Date(date).getDay()===6;
-        const dateColor = isSun?"#e07a5f":isSat?"#4f7cac":"#333";
+        const dateColor = isSun?"#e07a5f":isSat?"#4f7cac":"var(--text-secondary)";
         const dayTotal = grouped[date].reduce((s,r)=>s+Number(r.amount),0);
         return (
           <div key={date} style={{marginBottom:14,borderRadius:14,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,.06)"}}>
             {/* 日付ヘッダー */}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 16px",background:"#f0f0ec"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 16px",background:"var(--border)"}}>
               <span style={{fontSize:14,fontWeight:700,color:dateColor}}>
                 {date.slice(5).replace("-","/")}
                 <span style={{fontSize:12,fontWeight:500,marginLeft:6,opacity:.8}}>{dow}</span>
                 {date===today&&<span style={{marginLeft:8,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 6px"}}>today</span>}
               </span>
-              <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{fmtYen(dayTotal)}</span>
+              <span style={{fontSize:13,fontWeight:700,color:"var(--text-tertiary)"}}>{fmtYen(dayTotal)}</span>
             </div>
             {/* 各レコード */}
             {grouped[date].map((r,i)=>(
-              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"#fff",borderBottom:i<grouped[date].length-1?"1px solid #f5f5f2":"none"}}>
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"var(--surface)",borderBottom:i<grouped[date].length-1?"1px solid var(--border)":"none"}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                    <span style={{fontSize:14,fontWeight:500,color:"#1a1a1a"}}>{r.payee||"—"}</span>
-                    {r.isFixed&&<span style={{fontSize:10,background:"#f0f0ec",color:"#999",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
-                    {r.isBiz&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
-                    {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
+                    <span style={{fontSize:14,fontWeight:500,color:"var(--text-primary)"}}>{r.payee||"—"}</span>
+                    {r.isFixed&&<span style={{fontSize:10,background:"var(--border)",color:"var(--text-faint)",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
+                    {r.isBiz&&<span style={{fontSize:10,background:"var(--tint-green)",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
+                    {r.memo&&<span style={{fontSize:11,color:"var(--text-subtle)"}}>— {r.memo}</span>}
                   </div>
                 </div>
-                <span style={{fontSize:13,fontWeight:600,flexShrink:0,color:"#333"}}>{fmtYen(r.amount)}</span>
-                <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#aaa",cursor:"pointer",fontSize:10,padding:"2px 7px",flexShrink:0,fontFamily:"inherit"}} onClick={()=>onEdit(r)}>編集</button>
-                <button style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0,lineHeight:1}} onClick={()=>onDelete(r.id)}>×</button>
+                <span style={{fontSize:13,fontWeight:600,flexShrink:0,color:"var(--text-secondary)"}}>{fmtYen(r.amount)}</span>
+                <button style={{background:"none",border:"1px solid var(--border)",borderRadius:6,color:"var(--text-subtle)",cursor:"pointer",fontSize:10,padding:"2px 7px",flexShrink:0,fontFamily:"inherit"}} onClick={()=>onEdit(r)}>編集</button>
+                <button style={{background:"none",border:"none",color:"var(--border-strong)",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0,lineHeight:1}} onClick={()=>onDelete(r.id)}>×</button>
               </div>
             ))}
           </div>
@@ -525,23 +525,23 @@ function DetailPanel({ expandedDate, monthRecords, onClose, onDelete }) {
     ? epStart.slice(5).replace("-","/")+"〜"+epEnd.slice(5).replace("-","/")
     : epStart.slice(5).replace("-","/")+" "+DAYS[new Date(epStart).getDay()];
   return (
-    <div style={{marginTop:8,background:"#f7f7f4",borderRadius:10,padding:"14px 16px",border:"1px solid #eeeee9"}}>
+    <div style={{marginTop:8,background:"var(--surface-alt)",borderRadius:10,padding:"14px 16px",border:"1px solid var(--border)"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-        <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{rangeLabel} · {epCat}</span>
-        <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        <span style={{fontSize:13,fontWeight:700,color:"var(--text-tertiary)"}}>{rangeLabel} · {epCat}</span>
+        <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
       </div>
       {epRecs.map(r => (
-        <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid #eaeae5",fontSize:13}}>
-          {isRange && <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>}
-          <span style={{color:"#444",fontWeight:500,flexShrink:0}}>{r.payee||"—"}</span>
-          {r.memo && <span style={{color:"#aaa",flex:1}}>「{r.memo}」</span>}
-          {r.isFixed && <span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600}}>固定</span>}
-          {r.isBiz && <span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600}}>事業</span>}
+        <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"1px solid var(--border)",fontSize:13}}>
+          {isRange && <span style={{color:"var(--text-faint)",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>}
+          <span style={{color:"var(--text-secondary)",fontWeight:500,flexShrink:0}}>{r.payee||"—"}</span>
+          {r.memo && <span style={{color:"var(--text-subtle)",flex:1}}>「{r.memo}」</span>}
+          {r.isFixed && <span style={{fontSize:10,background:"var(--tint-blue)",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600}}>固定</span>}
+          {r.isBiz && <span style={{fontSize:10,background:"var(--tint-green)",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600}}>事業</span>}
           <span style={{fontWeight:700,marginLeft:"auto",flexShrink:0}}>{fmtYen(r.amount)}</span>
-          <button style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16,padding:"0 2px"}} onClick={()=>onDelete(r.id,epRecs.length)}>×</button>
+          <button style={{background:"none",border:"none",color:"var(--border-strong)",cursor:"pointer",fontSize:16,padding:"0 2px"}} onClick={()=>onDelete(r.id,epRecs.length)}>×</button>
         </div>
       ))}
-      {epRecs.length>1 && <div style={{textAlign:"right",fontSize:13,fontWeight:700,marginTop:8,color:"#333"}}>小計 {fmtYen(sub)}</div>}
+      {epRecs.length>1 && <div style={{textAlign:"right",fontSize:13,fontWeight:700,marginTop:8,color:"var(--text-secondary)"}}>小計 {fmtYen(sub)}</div>}
     </div>
   );
 }
@@ -564,7 +564,7 @@ function DonutChart({ items, colors, total, size=160, thickness=22, radius=40, o
     }
     cumulative += pct;
     return (
-      <circle key={it.key} cx={cx} cy={cy} r={r} fill="none" stroke={colors[it.key]||"#ccc"} strokeWidth={thickness}
+      <circle key={it.key} cx={cx} cy={cy} r={r} fill="none" stroke={colors[it.key]||"var(--border-strong)"} strokeWidth={thickness}
         strokeDasharray={dashArray} strokeDashoffset={dashOffset}
         transform={`rotate(-90 ${cx} ${cy})`}
         style={{cursor:onSegClick?"pointer":"default",opacity:activeKey&&activeKey!==it.key?0.35:1,transition:"opacity .15s"}}
@@ -576,7 +576,7 @@ function DonutChart({ items, colors, total, size=160, thickness=22, radius=40, o
   return (
     <div style={{position:"relative",width:size,maxWidth:"100%",aspectRatio:"1 / 1",margin:"0 auto"}}>
       <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",display:"block"}}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#eeeee9" strokeWidth={thickness} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth={thickness} />
         {segments}
         {labels.map(l=>(
           <text key={l.key} x={l.lx} y={l.ly} textAnchor="middle" fill="#fff" stroke="rgba(0,0,0,.35)" strokeWidth={0.6} paintOrder="stroke" style={{pointerEvents:"none",fontWeight:700}}>
@@ -586,8 +586,8 @@ function DonutChart({ items, colors, total, size=160, thickness=22, radius=40, o
         ))}
       </svg>
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
-        <span style={{fontSize:10,color:"#999",fontWeight:600}}>合計</span>
-        <span style={{fontSize:16,fontWeight:700,color:"#1a1a1a"}}>{fmtYen(total)}</span>
+        <span style={{fontSize:10,color:"var(--text-faint)",fontWeight:600}}>合計</span>
+        <span style={{fontSize:16,fontWeight:700,color:"var(--text-primary)"}}>{fmtYen(total)}</span>
       </div>
     </div>
   );
@@ -602,23 +602,23 @@ function TodayDetailModal({ date, records, catColors, onClose }) {
       <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <h3 style={{...M.mTitle,marginBottom:0}}>{date.slice(5).replace("-","/")} {dow} の内訳</h3>
-          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
         </div>
         {records.length===0 ? (
-          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+          <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"20px 0",fontSize:14}}>記録はありません</p>
         ) : (
           <Fragment>
             {records.map(r=>(
-              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f0f0ec"}}>
-                <span style={{width:8,height:8,borderRadius:"50%",background:catColors[r.category]||"#aaa",flexShrink:0,display:"inline-block"}} />
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid var(--border)"}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:catColors[r.category]||"var(--text-subtle)",flexShrink:0,display:"inline-block"}} />
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:14,fontWeight:600,color:"#1a1a1a"}}>{r.payee||"—"}</div>
-                  <div style={{fontSize:11,color:"#999",marginTop:2}}>{r.category}{r.memo?" — "+r.memo:""}</div>
+                  <div style={{fontSize:14,fontWeight:600,color:"var(--text-primary)"}}>{r.payee||"—"}</div>
+                  <div style={{fontSize:11,color:"var(--text-faint)",marginTop:2}}>{r.category}{r.memo?" — "+r.memo:""}</div>
                 </div>
                 <span style={{fontSize:14,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
               </div>
             ))}
-            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"var(--text-secondary)"}}>合計 {fmtYen(total)}</div>
           </Fragment>
         )}
       </div>
@@ -640,21 +640,21 @@ function BulkRecategorizeModal({ records, cats, catColors, onApply, onClose }) {
       <div style={{...M.modal,maxWidth:480,maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <h3 style={{...M.mTitle,marginBottom:0}}>未分類の一括編集</h3>
-          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
         </div>
         {groupKeys.length===0 ? (
-          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>未分類の記録はありません 🎉</p>
+          <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"20px 0",fontSize:14}}>未分類の記録はありません 🎉</p>
         ) : (
           <Fragment>
-            <p style={{fontSize:12,color:"#999",marginBottom:14}}>元のカテゴリー値ごとにグループ化しています。それぞれ正しいカテゴリーを選んで「適用」を押してください（全期間対象）。</p>
+            <p style={{fontSize:12,color:"var(--text-faint)",marginBottom:14}}>元のカテゴリー値ごとにグループ化しています。それぞれ正しいカテゴリーを選んで「適用」を押してください（全期間対象）。</p>
             {groupKeys.map(k=>{
               const recs = groups[k];
               const total = recs.reduce((s,r)=>s+Number(r.amount),0);
               const isApplied = applied.has(k);
               return (
-                <div key={k} style={{marginBottom:14,padding:"12px 14px",background:isApplied?"#edfaf5":"#f7f7f4",borderRadius:10,border:"1px solid "+(isApplied?"#b2e0d0":"#eeeee9")}}>
+                <div key={k} style={{marginBottom:14,padding:"12px 14px",background:isApplied?"var(--tint-green)":"var(--surface-alt)",borderRadius:10,border:"1px solid "+(isApplied?"#b2e0d0":"var(--border)")}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
-                    <span style={{fontSize:13,fontWeight:700,color:"#555"}}>{k===""?"（空欄）":`"${k}"`} <span style={{fontWeight:400,color:"#999"}}>（{recs.length}件）</span></span>
+                    <span style={{fontSize:13,fontWeight:700,color:"var(--text-tertiary)"}}>{k===""?"（空欄）":`"${k}"`} <span style={{fontWeight:400,color:"var(--text-faint)"}}>（{recs.length}件）</span></span>
                     <span style={{fontSize:13,fontWeight:700}}>{fmtYen(total)}</span>
                   </div>
                   {isApplied ? (
@@ -689,10 +689,10 @@ function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
       <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <h3 style={{...M.mTitle,marginBottom:0}}>{fmtShort(monStr)}〜{fmtShort(sunStr)} 今週の内訳</h3>
-          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
         </div>
         {total===0 ? (
-          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+          <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"20px 0",fontSize:14}}>記録はありません</p>
         ) : (
           <Fragment>
             <div style={{marginBottom:8}}>
@@ -700,14 +700,14 @@ function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
             </div>
             <div style={{marginTop:10}}>
               {sorted.map(c=>(
-                <div key={c} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid #f0f0ec"}}>
-                  <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"#aaa",flexShrink:0,display:"inline-block"}} />
-                  <span style={{fontSize:13,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
-                  <span style={{fontSize:13,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
+                <div key={c} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid var(--border)"}}>
+                  <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"var(--text-subtle)",flexShrink:0,display:"inline-block"}} />
+                  <span style={{fontSize:13,color:"var(--text-tertiary)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:"var(--text-secondary)",flexShrink:0}}>{fmtYen(catTotals[c])}</span>
                 </div>
               ))}
             </div>
-            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"var(--text-secondary)"}}>合計 {fmtYen(total)}</div>
           </Fragment>
         )}
       </div>
@@ -723,27 +723,27 @@ function CategoryBreakdownModal({ title, records, isUncat, onBulkRecat, onClose 
       <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <h3 style={{...M.mTitle,marginBottom:0}}>{title}</h3>
-          <button style={{background:"none",border:"none",color:"#aaa",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
         </div>
         {isUncat && onBulkRecat && (
           <button style={{...S.editLink,display:"block",marginBottom:10}} onClick={onBulkRecat}>全期間の未分類をまとめて編集 →</button>
         )}
         {records.length===0 ? (
-          <p style={{textAlign:"center",color:"#bbb",padding:"20px 0",fontSize:14}}>記録はありません</p>
+          <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"20px 0",fontSize:14}}>記録はありません</p>
         ) : (
           <Fragment>
             {records.map(r=>(
-              <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 0",borderBottom:"1px solid #f0f0ec",fontSize:13}}>
-                <span style={{color:"#999",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
-                <span style={{color:"#1a1a1a",fontWeight:600,flexShrink:0}}>{r.payee||"—"}</span>
-                {isUncat && <span style={{fontSize:10,background:"#eeeee9",color:"#888",borderRadius:4,padding:"1px 5px"}}>{r.category?`category: "${r.category}"`:"category未設定"}</span>}
-                {r.memo && <span style={{color:"#aaa",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>「{r.memo}」</span>}
-                {r.isFixed && <span style={{fontSize:10,background:"#eef4fb",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>固定</span>}
-                {r.isBiz && <span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>事業</span>}
+              <div key={r.id} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:13}}>
+                <span style={{color:"var(--text-faint)",fontSize:11,flexShrink:0}}>{normDate(r.date).slice(5).replace("-","/")}</span>
+                <span style={{color:"var(--text-primary)",fontWeight:600,flexShrink:0}}>{r.payee||"—"}</span>
+                {isUncat && <span style={{fontSize:10,background:"var(--border)",color:"var(--text-faint)",borderRadius:4,padding:"1px 5px"}}>{r.category?`category: "${r.category}"`:"category未設定"}</span>}
+                {r.memo && <span style={{color:"var(--text-subtle)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>「{r.memo}」</span>}
+                {r.isFixed && <span style={{fontSize:10,background:"var(--tint-blue)",color:"#4f7cac",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>固定</span>}
+                {r.isBiz && <span style={{fontSize:10,background:"var(--tint-green)",color:"#3aaa82",borderRadius:4,padding:"1px 5px",fontWeight:600,flexShrink:0}}>事業</span>}
                 <span style={{fontWeight:700,marginLeft:"auto",flexShrink:0}}>{fmtYen(r.amount)}</span>
               </div>
             ))}
-            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"#333"}}>合計 {fmtYen(total)}</div>
+            <div style={{textAlign:"right",fontSize:14,fontWeight:700,marginTop:10,color:"var(--text-secondary)"}}>合計 {fmtYen(total)}</div>
           </Fragment>
         )}
       </div>
@@ -754,10 +754,10 @@ function CategoryBreakdownModal({ title, records, isUncat, onBulkRecat, onClose 
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, on, color, onChange }) {
   return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"#fafaf8",borderRadius:10,border:"1px solid #eeeee9",cursor:"pointer"}} onClick={onChange}>
-      <span style={{fontSize:13,color:"#555"}}>{label}</span>
-      <div style={{width:36,height:22,borderRadius:11,background:on?color:"#ddd",position:"relative",flexShrink:0,transition:"background .2s"}}>
-        <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:2,left:on?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:"var(--surface-alt)",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer"}} onClick={onChange}>
+      <span style={{fontSize:13,color:"var(--text-tertiary)"}}>{label}</span>
+      <div style={{width:36,height:22,borderRadius:11,background:on?color:"var(--border-strong)",position:"relative",flexShrink:0,transition:"background .2s"}}>
+        <div style={{width:18,height:18,borderRadius:"50%",background:"var(--surface)",position:"absolute",top:2,left:on?16:2,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}} />
       </div>
     </div>
   );
@@ -1113,7 +1113,7 @@ export default function App() {
                   onTouchEnd={()=>clearTimeout(pressTimer.current)}
                   onTouchMove={()=>clearTimeout(pressTimer.current)}
                   title={pat?(pat.label+(pat.amount?" ¥"+Number(pat.amount).toLocaleString():"")):("パターン"+(i+1)+"を登録")}
-                  style={{borderRadius:20,padding:"6px 14px",fontSize:13,fontWeight:600,maxWidth:150,border:pat?"1.5px solid #4f7cac":"1.5px dashed #ccc",background:pat?"#eef4fb":"#fafaf8",cursor:"pointer",color:pat?"#1a1a1a":"#bbb",fontFamily:"inherit",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flexShrink:0}}>
+                  style={{borderRadius:20,padding:"6px 14px",fontSize:13,fontWeight:600,maxWidth:150,border:pat?"1.5px solid #4f7cac":"1.5px dashed var(--border-strong)",background:pat?"var(--tint-blue)":"var(--surface-alt)",cursor:"pointer",color:pat?"var(--text-primary)":"var(--text-subtle)",fontFamily:"inherit",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flexShrink:0}}>
                   {pat ? pat.label : "＋ 追加"}
                 </button>
               ))}
@@ -1131,20 +1131,20 @@ export default function App() {
               const weekTotal = weekRecs.reduce((s,r)=>s+Number(r.amount),0);
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-                  <div style={{background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
+                  <div style={{background:"var(--surface-alt)",borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>当月合計</div>
                     <div style={{fontSize:22,fontWeight:700}}>
                       {fmtYen(mNormalTotal)}
                       {mSpecialTotal>0 && <span style={{fontSize:12,fontWeight:600,color:"#e07a5f",marginLeft:6}}>（特別 +{fmtYen(mSpecialTotal)}）</span>}
                     </div>
                   </div>
                   <div style={{display:"flex",gap:8}}>
-                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setShowTodayDetail(true)}>
-                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
+                    <div style={{flex:1,background:"var(--surface-alt)",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setShowTodayDetail(true)}>
+                      <div style={{fontSize:10,fontWeight:600,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今日</div>
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(todayTotal)}</div>
                     </div>
-                    <div style={{flex:1,background:"#f7f7f4",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setWeekDetailRange({monStr,sunStr})}>
-                      <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週合計</div>
+                    <div style={{flex:1,background:"var(--surface-alt)",borderRadius:10,padding:"10px 14px",textAlign:"center",cursor:"pointer"}} onClick={()=>setWeekDetailRange({monStr,sunStr})}>
+                      <div style={{fontSize:10,fontWeight:600,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>今週合計</div>
                       <div style={{fontSize:18,fontWeight:700}}>{fmtYen(weekTotal)}</div>
                     </div>
                   </div>
@@ -1161,7 +1161,7 @@ export default function App() {
               <label style={S.label}>金額（円）</label>
               <div style={{display:"flex",gap:8}}>
                 <input style={{...S.inp,fontSize:20,fontWeight:700,textAlign:"right",flex:1,minWidth:0,boxSizing:"border-box"}} type="number" inputMode="numeric" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} />
-                <button style={{width:80,flexShrink:0,background:"#1a1a1a",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}} onClick={addRecord}>記録する</button>
+                <button style={{width:80,flexShrink:0,background:"var(--ink-bg)",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}} onClick={addRecord}>記録する</button>
               </div>
             </div>
 
@@ -1180,7 +1180,7 @@ export default function App() {
                   <button style={S.editLink} onClick={()=>setEditCatP(true)}>編集</button>
                 </div>
                 <div style={S.chips}>
-                  {payeesToShow.map(p=><button key={p} style={{...S.chip,...(form.payee===p?{background:"#333",color:"#fff",borderColor:"#333"}:{})}} onClick={()=>setForm(f=>({...f,payee:p}))}>{p}</button>)}
+                  {payeesToShow.map(p=><button key={p} style={{...S.chip,...(form.payee===p?{background:"var(--ink-bg)",color:"#fff",borderColor:"var(--ink-bg)"}:{})}} onClick={()=>setForm(f=>({...f,payee:p}))}>{p}</button>)}
                 </div>
               </div>
             )}
@@ -1189,7 +1189,7 @@ export default function App() {
             )}
 
             {form.isBiz && (
-              <div style={{background:"#edfaf5",borderRadius:10,padding:12,marginTop:10,border:"1px solid #b2e0d0"}}>
+              <div style={{background:"var(--tint-green)",borderRadius:10,padding:12,marginTop:10,border:"1px solid #b2e0d0"}}>
                 <div style={S.rowLabel}>
                   <label style={{...S.label,marginTop:0,color:"#3aaa82"}}>事業カテゴリー</label>
                   <button style={S.editLink} onClick={()=>setEditBizCat(true)}>編集</button>
@@ -1217,21 +1217,21 @@ export default function App() {
               <div style={{marginTop:24}}>
                 <p style={S.secTitle}>最近の記録</p>
                 {[...records].reverse().slice(0,10).map(r=>(
-                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
-                    <span style={{width:9,height:9,borderRadius:"50%",background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"#ccc",flexShrink:0,display:"inline-block"}} />
+                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+                    <span style={{width:9,height:9,borderRadius:"50%",background:(r.isBiz?bizCatColors:catColors)[r.bizCategory||r.category]||"var(--border-strong)",flexShrink:0,display:"inline-block"}} />
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:15,fontWeight:600,color:"#1a1a1a",marginBottom:3}}>{r.payee||"—"}</div>
+                      <div style={{fontSize:15,fontWeight:600,color:"var(--text-primary)",marginBottom:3}}>{r.payee||"—"}</div>
                       <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontSize:11,color:"#333"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
-                        <span style={{fontSize:11,color:"#999",background:"#f0f0ec",borderRadius:4,padding:"1px 6px"}}>{r.category}</span>
-                        {r.isFixed&&<span style={{fontSize:10,background:"#f0f0ec",color:"#999",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
-                        {r.isBiz&&<span style={{fontSize:10,background:"#edfaf5",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
-                        {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
+                        <span style={{fontSize:11,color:"var(--text-secondary)"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
+                        <span style={{fontSize:11,color:"var(--text-faint)",background:"var(--border)",borderRadius:4,padding:"1px 6px"}}>{r.category}</span>
+                        {r.isFixed&&<span style={{fontSize:10,background:"var(--border)",color:"var(--text-faint)",borderRadius:4,padding:"1px 6px"}}>固定費</span>}
+                        {r.isBiz&&<span style={{fontSize:10,background:"var(--tint-green)",color:"#3aaa82",borderRadius:4,padding:"1px 6px",fontWeight:600}}>事業経費</span>}
+                        {r.memo&&<span style={{fontSize:11,color:"var(--text-subtle)"}}>— {r.memo}</span>}
                       </div>
                     </div>
                     <span style={{fontSize:14,fontWeight:700,flexShrink:0}}>{fmtYen(r.amount)}</span>
-                    <button style={{background:"none",border:"1px solid #e0e0dc",borderRadius:6,color:"#aaa",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
-                    <button style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
+                    <button style={{background:"none",border:"1px solid var(--border)",borderRadius:6,color:"var(--text-subtle)",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
+                    <button style={{background:"none",border:"none",color:"var(--border-strong)",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
                   </div>
                 ))}
               </div>
@@ -1246,23 +1246,23 @@ export default function App() {
               <button style={S.arrowBtn} onClick={()=>navMonth(-1)}>◀</button>
               <div style={{textAlign:"center"}}>
                 <h2 style={{...S.cardTitle,marginBottom:2}}>{vYear}年 {vMonth}月</h2>
-                <div style={{fontSize:11,color:"#aaa"}}>{prevYear}/{pad(prevMonth)}/19 〜 {vYear}/{pad(vMonth)}/18</div>
+                <div style={{fontSize:11,color:"var(--text-subtle)"}}>{prevYear}/{pad(prevMonth)}/19 〜 {vYear}/{pad(vMonth)}/18</div>
               </div>
               <button style={S.arrowBtn} onClick={()=>navMonth(1)}>▶</button>
             </div>
 
             <div style={S.summaryBox}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-                <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>月合計</span>
+                <span style={{fontSize:11,fontWeight:600,color:"var(--text-faint)",letterSpacing:1,textTransform:"uppercase"}}>月合計</span>
                 <span style={{fontSize:26,fontWeight:700}}>{fmtYen(mTotal)}</span>
               </div>
               {mSpecialRecs.length>0 && (
                 <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  <div style={{flex:1,background:"#fff",borderRadius:8,padding:"8px 10px",border:"1px solid #eeeee9"}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#aaa",letterSpacing:1,textTransform:"uppercase"}}>通常支出</div>
-                    <div style={{fontSize:15,fontWeight:700,color:"#333"}}>{fmtYen(mNormalTotal)}</div>
+                  <div style={{flex:1,background:"var(--surface)",borderRadius:8,padding:"8px 10px",border:"1px solid var(--border)"}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"var(--text-subtle)",letterSpacing:1,textTransform:"uppercase"}}>通常支出</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"var(--text-secondary)"}}>{fmtYen(mNormalTotal)}</div>
                   </div>
-                  <div style={{flex:1,background:"#fdf1ee",borderRadius:8,padding:"8px 10px",border:"1px solid #f3cfc4"}}>
+                  <div style={{flex:1,background:"var(--tint-red)",borderRadius:8,padding:"8px 10px",border:"1px solid var(--tint-red)"}}>
                     <div style={{fontSize:10,fontWeight:600,color:"#e07a5f",letterSpacing:1,textTransform:"uppercase"}}>特別支出（{mSpecialRecs.length}件）</div>
                     <div style={{fontSize:15,fontWeight:700,color:"#e07a5f"}}>{fmtYen(mSpecialTotal)}</div>
                   </div>
@@ -1292,34 +1292,34 @@ export default function App() {
                     {sorted.map(c=>(
                       <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0",cursor:"pointer"}} onClick={()=>setExpCat(c)}>
                         <span style={{width:8,height:8,borderRadius:"50%",background:c==="__uncat__"?"#9a958a":catColors[c],flexShrink:0,display:"inline-block"}} />
-                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c==="__uncat__"?"未分類":c}</span>
-                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(totalsMap[c])}</span>
+                        <span style={{fontSize:12,color:"var(--text-tertiary)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c==="__uncat__"?"未分類":c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"var(--text-secondary)",flexShrink:0}}>{fmtYen(totalsMap[c])}</span>
                       </div>
                     ))}
                   </div>
                 );
               })()}
-              {mTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
+              {mTotal===0 && <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"24px 0",fontSize:14}}>この期間の記録はありません</p>}
             </div>
 
             {Object.keys(byWeek).length>0 && (
               <div>
-                <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"60vh",borderRadius:10,border:"1px solid #eeeee9"}}>
+                <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"60vh",borderRadius:10,border:"1px solid var(--border)"}}>
                   <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
-                    <thead style={{position:"sticky",top:0,zIndex:5,background:"#fafaf8"}}>
+                    <thead style={{position:"sticky",top:0,zIndex:5,background:"var(--surface-alt)"}}>
                       <tr>
                         <th style={{...S.th,...S.thFix}}>週</th>
-                        <th style={{...S.th,background:"#f0f0ec",color:"#333",minWidth:80}}>合計</th>
+                        <th style={{...S.th,background:"var(--border)",color:"var(--text-secondary)",minWidth:80}}>合計</th>
                         {usedCats.map(c=>(
                           <th key={c} style={S.th}>
                             <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:catColors[c],marginRight:4,verticalAlign:"middle"}} />{c}
                           </th>
                         ))}
                       </tr>
-                      <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
-                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>月計</td>
-                        <td style={{...S.td,fontWeight:700,background:"#f0f0ec"}}>{fmtYen(mTotal)}</td>
-                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700,background:"#f5f5f0"}}>{fmtYen(catTotals[c])}</td>)}
+                      <tr style={{background:"var(--surface-alt)",borderTop:"2px solid var(--border)"}}>
+                        <td style={{...S.td,...S.thFix,fontWeight:700,background:"var(--surface-alt)"}}>月計</td>
+                        <td style={{...S.td,fontWeight:700,background:"var(--border)"}}>{fmtYen(mTotal)}</td>
+                        {usedCats.map(c=><td key={c} style={{...S.td,fontWeight:700,background:"var(--surface-alt)"}}>{fmtYen(catTotals[c])}</td>)}
                       </tr>
                     </thead>
                     <tbody>
@@ -1329,19 +1329,19 @@ export default function App() {
                         const isThisWeek = mondayOf(today)===wk;
                         return (
                           <Fragment key={wk}>
-                            <tr style={{...(wi%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isThisWeek?{background:"#eef4fb"}:{})}}>
-                              <td style={{...S.td,...S.thFix,color:"#444",background:isThisWeek?"#eef4fb":wi%2===0?"#fff":"#fdfdfb"}}>
+                            <tr style={{...(wi%2===0?{background:"var(--surface)"}:{background:"var(--surface-alt)"}),...(isThisWeek?{background:"var(--tint-blue)"}:{})}}>
+                              <td style={{...S.td,...S.thFix,color:"var(--text-secondary)",background:isThisWeek?"var(--tint-blue)":wi%2===0?"var(--surface)":"var(--surface-alt)"}}>
                                 {label}
                                 {isThisWeek&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今週</span>}
                               </td>
-                              <td style={{...S.td,fontWeight:600,background:"#fafaf8"}}>{fmtYen(weekTotal)}</td>
+                              <td style={{...S.td,fontWeight:600,background:"var(--surface-alt)"}}>{fmtYen(weekTotal)}</td>
                               {usedCats.map(c=>{
                                 const amt=byWeek[wk][c];
                                 const ck=wk+"|"+sunStr+"|"+c;
                                 return (
                                   <td key={c} style={{...S.td,...(amt?{cursor:"pointer"}:{}),...(expDate===ck?{background:catColors[c]+"22"}:{})}}
                                     onClick={()=>{ if(amt) setExpDate(expDate===ck?null:ck); }}>
-                                    {amt ? <span style={{color:catColors[c],fontWeight:600}}>{fmtYen(amt)}{expDate===ck&&<span style={{fontSize:9,marginLeft:2}}>▲</span>}</span> : <span style={{color:"#d0d0cb"}}>—</span>}
+                                    {amt ? <span style={{color:catColors[c],fontWeight:600}}>{fmtYen(amt)}{expDate===ck&&<span style={{fontSize:9,marginLeft:2}}>▲</span>}</span> : <span style={{color:"var(--text-dash)"}}>—</span>}
                                   </td>
                                 );
                               })}
@@ -1379,7 +1379,7 @@ export default function App() {
             </div>
             <div style={S.summaryBox}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-                <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>年間合計</span>
+                <span style={{fontSize:11,fontWeight:600,color:"var(--text-faint)",letterSpacing:1,textTransform:"uppercase"}}>年間合計</span>
                 <span style={{fontSize:26,fontWeight:700}}>{fmtYen(yTotal)}</span>
               </div>
               {yTotal>0 && (
@@ -1404,16 +1404,16 @@ export default function App() {
                     {sorted.map(c=>(
                       <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
                         <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c],flexShrink:0,display:"inline-block"}} />
-                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
-                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(yCatTotals[c])}</span>
+                        <span style={{fontSize:12,color:"var(--text-tertiary)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"var(--text-secondary)",flexShrink:0}}>{fmtYen(yCatTotals[c])}</span>
                       </div>
                     ))}
                   </div>
                 );
               })()}
             </div>
-            {yRecs.length===0 ? <p style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>この年の記録はありません</p> : (
-              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #eeeee9"}}>
+            {yRecs.length===0 ? <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"32px 0",fontSize:14}}>この年の記録はありません</p> : (
+              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid var(--border)"}}>
                 <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                   <thead>
                     <tr>
@@ -1427,29 +1427,29 @@ export default function App() {
                       const m=mi+1;
                       const tot=Object.values(byMonth[m]).reduce((a,b)=>a+b,0);
                       const isCur=vYear===new Date().getFullYear()&&m===new Date().getMonth()+1;
-                      const rowBg = isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb";
+                      const rowBg = isCur?"var(--tint-blue)":mi%2===0?"var(--surface)":"var(--surface-alt)";
                       return (
-                        <tr key={m} style={{...(mi%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isCur?{background:"#eef4fb"}:{})}}>
+                        <tr key={m} style={{...(mi%2===0?{background:"var(--surface)"}:{background:"var(--surface-alt)"}),...(isCur?{background:"var(--tint-blue)"}:{})}}>
                           <td style={{...S.td,...S.thFix,fontWeight:600,background:rowBg}}>
                             {ml}{isCur&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今月</span>}
                           </td>
-                          <td style={{...S.td,...S.thFix2,fontWeight:600,background:rowBg}}>{tot>0?fmtYen(tot):<span style={{color:"#d0d0cb"}}>—</span>}</td>
+                          <td style={{...S.td,...S.thFix2,fontWeight:600,background:rowBg}}>{tot>0?fmtYen(tot):<span style={{color:"var(--text-dash)"}}>—</span>}</td>
                           {yUsedCats.map(c=>{
                             const amt=byMonth[m][c];
                             const ck=m+"|"+c;
                             return (
                               <td key={c} style={{...S.td,...(amt?{cursor:"pointer"}:{}),...(expYMonthCat===ck?{background:catColors[c]+"22"}:{})}}
                                 onClick={()=>{ if(amt) setExpYMonthCat(expYMonthCat===ck?null:ck); }}>
-                                {amt?fmtYen(amt):<span style={{color:"#d0d0cb"}}>—</span>}
+                                {amt?fmtYen(amt):<span style={{color:"var(--text-dash)"}}>—</span>}
                               </td>
                             );
                           })}
                         </tr>
                       );
                     })}
-                    <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
-                      <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>年計</td>
-                      <td style={{...S.td,...S.thFix2,fontWeight:700,background:"#f5f5f0"}}>{fmtYen(yTotal)}</td>
+                    <tr style={{background:"var(--surface-alt)",borderTop:"2px solid var(--border)"}}>
+                      <td style={{...S.td,...S.thFix,fontWeight:700,background:"var(--surface-alt)"}}>年計</td>
+                      <td style={{...S.td,...S.thFix2,fontWeight:700,background:"var(--surface-alt)"}}>{fmtYen(yTotal)}</td>
                       {yUsedCats.map(c=><td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(yCatTotals[c])}</td>)}
                     </tr>
                   </tbody>
@@ -1470,7 +1470,7 @@ export default function App() {
             </div>
             <div style={{...S.summaryBox,borderColor:"#b2e0d0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-                <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>月間事業経費合計</span>
+                <span style={{fontSize:11,fontWeight:600,color:"var(--text-faint)",letterSpacing:1,textTransform:"uppercase"}}>月間事業経費合計</span>
                 <span style={{fontSize:26,fontWeight:700,color:"#3aaa82"}}>{fmtYen(bzMTotal)}</span>
               </div>
               {bzMTotal>0 && (
@@ -1495,23 +1495,23 @@ export default function App() {
                     {sorted.map(c=>(
                       <div key={c} style={{display:"flex",alignItems:"center",gap:5,minWidth:0,padding:"3px 0"}}>
                         <span style={{width:8,height:8,borderRadius:"50%",background:bizCatColors[c],flexShrink:0,display:"inline-block"}} />
-                        <span style={{fontSize:12,color:"#555",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
-                        <span style={{fontSize:12,fontWeight:700,color:"#333",flexShrink:0}}>{fmtYen(bzTotals[c])}</span>
+                        <span style={{fontSize:12,color:"var(--text-tertiary)",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"var(--text-secondary)",flexShrink:0}}>{fmtYen(bzTotals[c])}</span>
                       </div>
                     ))}
                   </div>
                 );
               })()}
-              {bzMTotal===0 && <p style={{textAlign:"center",color:"#bbb",padding:"24px 0",fontSize:14}}>この月の事業経費はありません</p>}
+              {bzMTotal===0 && <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"24px 0",fontSize:14}}>この月の事業経費はありません</p>}
             </div>
             {bzYRecs.length>0 && (
-              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #eeeee9",marginTop:8}}>
+              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid var(--border)",marginTop:8}}>
                 <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0,fontSize:13}}>
                   <thead>
                     <tr>
                       <th style={{...S.th,...S.thFix}}>月</th>
                       {bzYUsed.map(c=><th key={c} style={S.th}><span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:bizCatColors[c],marginRight:4,verticalAlign:"middle"}} />{c}</th>)}
-                      <th style={{...S.th,background:"#f0f0ec",color:"#333"}}>合計</th>
+                      <th style={{...S.th,background:"var(--border)",color:"var(--text-secondary)"}}>合計</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1520,23 +1520,23 @@ export default function App() {
                       const tot=Object.values(bzByM[m]).reduce((a,b)=>a+b,0);
                       const isCur=bzYear===new Date().getFullYear()&&m===new Date().getMonth()+1;
                       return (
-                        <tr key={m} style={{...(mi%2===0?{background:"#fff"}:{background:"#fdfdfb"}),...(isCur?{background:"#eef4fb"}:{})}}>
-                          <td style={{...S.td,...S.thFix,fontWeight:600,background:isCur?"#eef4fb":mi%2===0?"#fff":"#fdfdfb"}}>{ml}{isCur&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今月</span>}</td>
-                          {bzYUsed.map(c=><td key={c} style={S.td}>{bzByM[m][c]?fmtYen(bzByM[m][c]):<span style={{color:"#d0d0cb"}}>—</span>}</td>)}
-                          <td style={{...S.td,fontWeight:600,background:"#fafaf8"}}>{tot>0?fmtYen(tot):<span style={{color:"#d0d0cb"}}>—</span>}</td>
+                        <tr key={m} style={{...(mi%2===0?{background:"var(--surface)"}:{background:"var(--surface-alt)"}),...(isCur?{background:"var(--tint-blue)"}:{})}}>
+                          <td style={{...S.td,...S.thFix,fontWeight:600,background:isCur?"var(--tint-blue)":mi%2===0?"var(--surface)":"var(--surface-alt)"}}>{ml}{isCur&&<span style={{marginLeft:6,fontSize:10,background:"#4f7cac",color:"#fff",borderRadius:4,padding:"1px 5px"}}>今月</span>}</td>
+                          {bzYUsed.map(c=><td key={c} style={S.td}>{bzByM[m][c]?fmtYen(bzByM[m][c]):<span style={{color:"var(--text-dash)"}}>—</span>}</td>)}
+                          <td style={{...S.td,fontWeight:600,background:"var(--surface-alt)"}}>{tot>0?fmtYen(tot):<span style={{color:"var(--text-dash)"}}>—</span>}</td>
                         </tr>
                       );
                     })}
-                    <tr style={{background:"#f5f5f0",borderTop:"2px solid #e0e0da"}}>
-                      <td style={{...S.td,...S.thFix,fontWeight:700,background:"#f5f5f0"}}>年計</td>
+                    <tr style={{background:"var(--surface-alt)",borderTop:"2px solid var(--border)"}}>
+                      <td style={{...S.td,...S.thFix,fontWeight:700,background:"var(--surface-alt)"}}>年計</td>
                       {bzYUsed.map(c=>{const s=bzYRecs.filter(r=>(r.bizCategory||r.category)===c).reduce((a,r)=>a+Number(r.amount),0);return<td key={c} style={{...S.td,fontWeight:700}}>{fmtYen(s)}</td>;})}
-                      <td style={{...S.td,fontWeight:700,background:"#f0f0ec"}}>{fmtYen(bzYRecs.reduce((s,r)=>s+Number(r.amount),0))}</td>
+                      <td style={{...S.td,fontWeight:700,background:"var(--border)"}}>{fmtYen(bzYRecs.reduce((s,r)=>s+Number(r.amount),0))}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             )}
-            <div style={{marginTop:20,borderTop:"1px solid #f0f0ec",paddingTop:16}}>
+            <div style={{marginTop:20,borderTop:"1px solid var(--border)",paddingTop:16}}>
               <div style={{display:"flex",gap:8}}>
                 <button style={{...S.primaryBtn,flex:1,marginTop:0,background:"#3aaa82",fontSize:13}} onClick={()=>setEditBizCat(true)}>カテゴリーを編集</button>
                 <button style={{...S.primaryBtn,flex:1,marginTop:0,background:"#5c9e7a",fontSize:13}} onClick={()=>setEditBizP(true)}>支払い先を編集</button>
@@ -1552,18 +1552,18 @@ export default function App() {
                     onClick={downloadCSV}>CSV出力</button>
                 </div>
                 {[...bzMRecs].sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date))).map(r=>(
-                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid #f0f0ec"}}>
+                  <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:14,fontWeight:600}}>{r.payee||"—"}</div>
                       <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontSize:11,color:"#aaa"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
-                        <span style={{fontSize:11,color:"#999",background:"#f0f0ec",borderRadius:4,padding:"1px 6px"}}>{r.bizCategory||r.category}</span>
-                        {r.memo&&<span style={{fontSize:11,color:"#bbb"}}>— {r.memo}</span>}
+                        <span style={{fontSize:11,color:"var(--text-subtle)"}}>{normDate(r.date).slice(5).replace("-","/")} {DAYS[new Date(normDate(r.date)).getDay()]}</span>
+                        <span style={{fontSize:11,color:"var(--text-faint)",background:"var(--border)",borderRadius:4,padding:"1px 6px"}}>{r.bizCategory||r.category}</span>
+                        {r.memo&&<span style={{fontSize:11,color:"var(--text-subtle)"}}>— {r.memo}</span>}
                       </div>
                     </div>
                     <span style={{fontSize:14,fontWeight:700,flexShrink:0,color:"#3aaa82"}}>{fmtYen(r.amount)}</span>
-                    <button style={{background:"none",border:"1px solid #ddd",borderRadius:6,color:"#888",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
-                    <button style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
+                    <button style={{background:"none",border:"1px solid var(--border-strong)",borderRadius:6,color:"var(--text-faint)",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>setEditRec({...r})}>編集</button>
+                    <button style={{background:"none",border:"none",color:"var(--border-strong)",cursor:"pointer",fontSize:16,padding:"0 2px",flexShrink:0}} onClick={()=>delRecord(r.id)}>×</button>
                   </div>
                 ))}
               </div>
@@ -1575,7 +1575,7 @@ export default function App() {
         {tab==="card" && (
           <div style={S.card}>
             <h2 style={S.cardTitle}>Card</h2>
-            <p style={{fontSize:14,color:"#666",marginBottom:20,textAlign:"center"}}>カード明細を確認して支出を記録しましょう</p>
+            <p style={{fontSize:14,color:"var(--text-muted)",marginBottom:20,textAlign:"center"}}>カード明細を確認して支出を記録しましょう</p>
             <a
               href="https://global.americanexpress.com/activity/recent?account_key=207669CFAE5C0CEF5271D847EDECCCD9"
               target="_blank"
@@ -1583,7 +1583,7 @@ export default function App() {
               style={{display:"block",padding:"16px",background:"#1a6cb5",color:"#fff",borderRadius:12,textAlign:"center",fontSize:15,fontWeight:700,textDecoration:"none",marginBottom:12}}>
               American Express 明細を見る →
             </a>
-            <p style={{fontSize:12,color:"#aaa",textAlign:"center"}}>明細を確認後、入力タブから支出を記録してください</p>
+            <p style={{fontSize:12,color:"var(--text-subtle)",textAlign:"center"}}>明細を確認後、入力タブから支出を記録してください</p>
           </div>
         )}
 
@@ -1594,7 +1594,7 @@ export default function App() {
             <h2 style={S.cardTitle}>固定費候補</h2>
             <div style={S.summaryBox}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:fixed.length>0?12:0}}>
-                <span style={{fontSize:11,fontWeight:600,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>月間固定費合計</span>
+                <span style={{fontSize:11,fontWeight:600,color:"var(--text-faint)",letterSpacing:1,textTransform:"uppercase"}}>月間固定費合計</span>
                 <span style={{fontSize:26,fontWeight:700}}>{fmtYen(fixTotal)}</span>
               </div>
               {fixed.length>0 && (()=>{
@@ -1611,10 +1611,10 @@ export default function App() {
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginTop:12}}>
                     <tbody>
                       {sortedCats.map(c=>(
-                        <tr key={c} style={{borderTop:"1px solid #eeeee9"}}>
+                        <tr key={c} style={{borderTop:"1px solid var(--border)"}}>
                           <td style={{padding:"6px 0",display:"flex",alignItems:"center",gap:6}}>
-                            <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"#aaa",display:"inline-block",flexShrink:0}} />
-                            <span style={{color:"#555"}}>{c}</span>
+                            <span style={{width:8,height:8,borderRadius:"50%",background:catColors[c]||"var(--text-subtle)",display:"inline-block",flexShrink:0}} />
+                            <span style={{color:"var(--text-tertiary)"}}>{c}</span>
                           </td>
                           <td style={{padding:"6px 0",textAlign:"right",fontWeight:600}}>{fmtYen(catTotals[c])}</td>
                         </tr>
@@ -1625,9 +1625,9 @@ export default function App() {
                 );
               })()}
             </div>
-            {fixed.length===0 ? <p style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>固定費候補がありません</p> : (
+            {fixed.length===0 ? <p style={{textAlign:"center",color:"var(--text-subtle)",padding:"32px 0",fontSize:14}}>固定費候補がありません</p> : (
               <div>
-                <p style={{fontSize:12,color:"#aaa",marginBottom:12}}>記録したいものを選んで「記録する」を押してください</p>
+                <p style={{fontSize:12,color:"var(--text-subtle)",marginBottom:12}}>記録したいものを選んで「記録する」を押してください</p>
                 {(()=>{
                   const grouped = {};
                   fixed.forEach(f=>{
@@ -1642,15 +1642,15 @@ export default function App() {
                     const isCollapsed = collapsedCats.has(cat);
                     return (
                     <div key={cat} style={{marginBottom:16}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:"#f0f0ec",borderRadius:8,padding:"8px 14px",marginTop:16,marginBottom:4,cursor:"pointer"}}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:"var(--border)",borderRadius:8,padding:"8px 14px",marginTop:16,marginBottom:4,cursor:"pointer"}}
                         onClick={()=>setCollapsedCats(prev=>{ const next=new Set(prev); if(next.has(cat)) next.delete(cat); else next.add(cat); return next; })}>
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{width:12,height:12,borderRadius:"50%",background:catColors[cat]||"#aaa",display:"inline-block",flexShrink:0}} />
-                          <span style={{fontSize:15,fontWeight:700,color:"#333"}}>{cat}</span>
+                          <span style={{width:12,height:12,borderRadius:"50%",background:catColors[cat]||"var(--text-subtle)",display:"inline-block",flexShrink:0}} />
+                          <span style={{fontSize:15,fontWeight:700,color:"var(--text-secondary)"}}>{cat}</span>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
-                          <span style={{fontSize:14,fontWeight:700,color:"#333"}}>{fmtYen(catTotal)}</span>
-                          <span style={{fontSize:11,color:"#999"}}>{isCollapsed?"▶":"▼"}</span>
+                          <span style={{fontSize:14,fontWeight:700,color:"var(--text-secondary)"}}>{fmtYen(catTotal)}</span>
+                          <span style={{fontSize:11,color:"var(--text-faint)"}}>{isCollapsed?"▶":"▼"}</span>
                         </div>
                       </div>
                       {!isCollapsed && grouped[cat].map((f,fi)=>{
@@ -1659,7 +1659,7 @@ export default function App() {
                         return (
                           <Fragment key={f.id}>
                             {showDayHeader && (
-                              <div style={{fontSize:12,fontWeight:600,color:"#888",paddingLeft:14,marginTop:8,marginBottom:4}}>毎月{f.day}日</div>
+                              <div style={{fontSize:12,fontWeight:600,color:"var(--text-faint)",paddingLeft:14,marginTop:8,marginBottom:4}}>毎月{f.day}日</div>
                             )}
                             <div style={{paddingLeft:24}}>
                               <FixedCandidateRow item={f} catColors={catColors} isRecorded={isRec} viewYear={vYear} viewMonth={vMonth}
@@ -1683,8 +1683,8 @@ export default function App() {
               <button style={{...S.primaryBtn,marginTop:0,flex:1}} onClick={()=>setEditFixed(true)}>編集</button>
               <button style={{...S.primaryBtn,marginTop:0,flex:1,background:"#4f7cac"}} onClick={()=>setAddFixed(true)}>＋ 追加</button>
             </div>
-            <div style={{marginTop:14,borderTop:"1px solid #f0f0ec",paddingTop:14}}>
-              <p style={{fontSize:13,color:"#666",marginBottom:10}}>今月（{new Date().getFullYear()}年{new Date().getMonth()+1}月）に一括記録：</p>
+            <div style={{marginTop:14,borderTop:"1px solid var(--border)",paddingTop:14}}>
+              <p style={{fontSize:13,color:"var(--text-muted)",marginBottom:10}}>今月（{new Date().getFullYear()}年{new Date().getMonth()+1}月）に一括記録：</p>
               <button style={{...S.primaryBtn,background:"#4f7cac",marginTop:0}} onClick={applyFixed} disabled={fixed.length===0}>今月の固定費を記録する</button>
             </div>
           </div>
@@ -1734,61 +1734,54 @@ export default function App() {
 }
 
 
-// ── Dark Mode Styles ──────────────────────────────────────────────────────────
-const DK = {
-  app:    { background:"#0f0f0f", color:"#f0f0f0" },
-  header: { background:"#1a1a1a", borderBottomColor:"#333" },
-  main:   { background:"#0f0f0f" },
-  card:   { background:"#1e1e1e", boxShadow:"0 1px 4px rgba(0,0,0,.3)" },
-};
 // ── Styles ────────────────────────────────────────────────────────────────────
 const S = {
-  app:       { fontFamily:"'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif", background:"#f7f7f5", minHeight:"100vh", color:"#1a1a1a" },
-  header:    { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", background:"#fff", borderBottom:"1px solid #e8e8e5", position:"sticky", top:0, zIndex:100, gap:6, flexWrap:"wrap" },
+  app:       { fontFamily:"'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif", background:"var(--bg-page)", minHeight:"100vh", color:"var(--text-primary)" },
+  header:    { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", background:"var(--surface)", borderBottom:"1px solid var(--border)", position:"sticky", top:0, zIndex:100, gap:6, flexWrap:"wrap" },
   logo:      { fontSize:16, fontWeight:700, letterSpacing:2 },
-  sync:      { fontSize:11, color:"#4f7cac", background:"#eef4fb", borderRadius:10, padding:"2px 8px" },
-  syncError: { fontSize:11, color:"#c0392b", background:"#fdecea", borderRadius:10, padding:"2px 8px", cursor:"pointer", fontWeight:700 },
+  sync:      { fontSize:11, color:"#4f7cac", background:"var(--tint-blue)", borderRadius:10, padding:"2px 8px" },
+  syncError: { fontSize:11, color:"var(--danger-text)", background:"var(--tint-red)", borderRadius:10, padding:"2px 8px", cursor:"pointer", fontWeight:700 },
   nav:       { display:"flex", gap:2, flexWrap:"wrap" },
-  navBtn:    { padding:"5px 8px", border:"none", background:"transparent", borderRadius:20, fontSize:11, cursor:"pointer", color:"#555", fontFamily:"inherit" },
-  navOn:     { background:"#1a1a1a", color:"#fff" },
-  refreshBtn:{ background:"none", border:"1px solid #e0e0dc", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:16, color:"#666" },
+  navBtn:    { padding:"5px 8px", border:"none", background:"transparent", borderRadius:20, fontSize:11, cursor:"pointer", color:"var(--text-tertiary)", fontFamily:"inherit" },
+  navOn:     { background:"var(--ink-bg)", color:"#fff" },
+  refreshBtn:{ background:"none", border:"1px solid var(--border)", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:16, color:"var(--text-muted)" },
   main:      { maxWidth:900, margin:"0 auto", padding:"16px 12px 100px", overflowX:"hidden" },
-  card:      { background:"#fff", borderRadius:16, padding:"20px 16px", boxShadow:"0 1px 4px rgba(0,0,0,.06)", overflow:"hidden" },
+  card:      { background:"var(--surface)", borderRadius:16, padding:"20px 16px", boxShadow:"0 1px 4px rgba(0,0,0,.06)", overflow:"hidden" },
   cardTitle: { fontSize:18, fontWeight:700, marginBottom:16, textAlign:"center" },
   navRow:    { display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:16 },
-  arrowBtn:  { background:"none", border:"1px solid #e0e0dc", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:14 },
-  summaryBox:{ background:"#fafaf8", borderRadius:12, padding:"16px", marginBottom:16, border:"1px solid #eeeee9" },
-  label:     { display:"block", fontSize:11, fontWeight:600, color:"#888", letterSpacing:1, textTransform:"uppercase", marginBottom:5, marginTop:12 },
+  arrowBtn:  { background:"none", border:"1px solid var(--border)", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:14 },
+  summaryBox:{ background:"var(--surface-alt)", borderRadius:12, padding:"16px", marginBottom:16, border:"1px solid var(--border)" },
+  label:     { display:"block", fontSize:11, fontWeight:600, color:"var(--text-faint)", letterSpacing:1, textTransform:"uppercase", marginBottom:5, marginTop:12 },
   rowLabel:  { display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:12, marginBottom:5 },
   editLink:  { fontSize:12, color:"#4f7cac", background:"none", border:"none", cursor:"pointer", padding:0 },
-  inp:       { width:"100%", boxSizing:"border-box", padding:"10px 12px", border:"1px solid #e0e0dc", borderRadius:10, fontSize:16, outline:"none", fontFamily:"inherit", background:"#fafaf8" },
+  inp:       { width:"100%", boxSizing:"border-box", padding:"10px 12px", border:"1px solid var(--border)", borderRadius:10, fontSize:16, outline:"none", fontFamily:"inherit", background:"var(--surface-alt)" },
   chips:     { display:"flex", flexWrap:"wrap", gap:6 },
-  chip:      { padding:"6px 13px", border:"1px solid #ddd", borderRadius:20, fontSize:13, background:"#fafaf8", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
-  primaryBtn:{ marginTop:10, width:"100%", padding:"14px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
-  secTitle:  { fontSize:11, fontWeight:700, color:"#aaa", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
-  th:        { padding:"9px 10px", background:"#fafaf8", fontWeight:600, fontSize:12, color:"#666", borderBottom:"2px solid #e8e8e3", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3, boxShadow:"0 1px 0 #e8e8e3" },
-  thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"#fafaf8", minWidth:100, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
-  thFix2:    { position:"sticky", left:100, zIndex:4, background:"#f0f0ec", minWidth:90, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
-  td:        { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid #f2f2ee", fontSize:13, color:"#333", whiteSpace:"nowrap", background:"#fff" },
+  chip:      { padding:"6px 13px", border:"1px solid var(--border-strong)", borderRadius:20, fontSize:13, background:"var(--surface-alt)", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
+  primaryBtn:{ marginTop:10, width:"100%", padding:"14px", background:"var(--ink-bg)", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
+  secTitle:  { fontSize:11, fontWeight:700, color:"var(--text-subtle)", letterSpacing:1, textTransform:"uppercase", marginBottom:10 },
+  th:        { padding:"9px 10px", background:"var(--surface-alt)", fontWeight:600, fontSize:12, color:"var(--text-muted)", borderBottom:"2px solid var(--border)", textAlign:"right", whiteSpace:"nowrap", position:"sticky", top:0, zIndex:3, boxShadow:"0 1px 0 var(--border)" },
+  thFix:     { textAlign:"left", position:"sticky", left:0, zIndex:4, background:"var(--surface-alt)", minWidth:100, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
+  thFix2:    { position:"sticky", left:100, zIndex:4, background:"var(--border)", minWidth:90, boxShadow:"2px 0 4px rgba(0,0,0,.04)" },
+  td:        { padding:"8px 10px", textAlign:"right", borderBottom:"1px solid var(--border)", fontSize:13, color:"var(--text-secondary)", whiteSpace:"nowrap", background:"var(--surface)" },
   fab:       { position:"fixed", bottom:28, right:20, padding:"12px 20px", background:"#4f7cac", color:"#fff", border:"none", borderRadius:28, fontSize:14, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 14px rgba(79,124,172,.4)", zIndex:150, fontFamily:"inherit" },
-  toast:     { position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:"#1a1a1a", color:"#fff", padding:"10px 22px", borderRadius:30, fontSize:13, zIndex:300, whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(0,0,0,.2)" },
+  toast:     { position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:"var(--ink-bg)", color:"#fff", padding:"10px 22px", borderRadius:30, fontSize:13, zIndex:300, whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(0,0,0,.2)" },
 };
 
 // Modal styles
 const M = {
   overlay: { position:"fixed", inset:0, background:"rgba(0,0,0,.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 },
-  modal:   { background:"#fff", borderRadius:16, padding:24, width:"100%", maxWidth:440, maxHeight:"85vh", overflowY:"auto" },
+  modal:   { background:"var(--surface)", borderRadius:16, padding:24, width:"100%", maxWidth:440, maxHeight:"85vh", overflowY:"auto" },
   mTitle:  { fontSize:16, fontWeight:700, marginBottom:16 },
-  label:   { display:"block", fontSize:11, fontWeight:600, color:"#888", letterSpacing:1, textTransform:"uppercase", marginBottom:5, marginTop:10 },
-  inp:     { padding:"8px 12px", border:"1px solid #e0e0dc", borderRadius:8, fontSize:16, outline:"none", fontFamily:"inherit", background:"#fafaf8", boxSizing:"border-box" },
-  chip:    { padding:"6px 13px", border:"1px solid #ddd", borderRadius:20, fontSize:13, background:"#fafaf8", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
-  tag:     { display:"flex", alignItems:"center", gap:4, padding:"4px 10px", background:"#f0f0ec", borderRadius:20, fontSize:13 },
+  label:   { display:"block", fontSize:11, fontWeight:600, color:"var(--text-faint)", letterSpacing:1, textTransform:"uppercase", marginBottom:5, marginTop:10 },
+  inp:     { padding:"8px 12px", border:"1px solid var(--border)", borderRadius:8, fontSize:16, outline:"none", fontFamily:"inherit", background:"var(--surface-alt)", boxSizing:"border-box" },
+  chip:    { padding:"6px 13px", border:"1px solid var(--border-strong)", borderRadius:20, fontSize:13, background:"var(--surface-alt)", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" },
+  tag:     { display:"flex", alignItems:"center", gap:4, padding:"4px 10px", background:"var(--border)", borderRadius:20, fontSize:13 },
   btns:    { display:"flex", gap:8, justifyContent:"flex-end", marginTop:4 },
-  cancel:  { padding:"8px 16px", background:"#f0f0ec", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit" },
-  save:    { padding:"8px 20px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit" },
-  addBtn:  { padding:"8px 16px", background:"#1a1a1a", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit", whiteSpace:"nowrap" },
-  xBtn:    { background:"none", border:"none", cursor:"pointer", color:"#aaa", fontSize:14, padding:0, lineHeight:1 },
-  sortBtn: { background:"none", border:"1px solid #ddd", borderRadius:6, cursor:"pointer", color:"#888", fontSize:12, padding:"2px 7px", fontFamily:"inherit", lineHeight:1.4 },
-  catTab:  { padding:"4px 10px", border:"1px solid #ddd", borderRadius:16, fontSize:12, cursor:"pointer", background:"#fafaf8", fontFamily:"inherit", color:"#666" },
-  catTabOn:{ background:"#1a1a1a", color:"#fff", borderColor:"#1a1a1a" },
+  cancel:  { padding:"8px 16px", background:"var(--border)", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit" },
+  save:    { padding:"8px 20px", background:"var(--ink-bg)", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit" },
+  addBtn:  { padding:"8px 16px", background:"var(--ink-bg)", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:14, fontFamily:"inherit", whiteSpace:"nowrap" },
+  xBtn:    { background:"none", border:"none", cursor:"pointer", color:"var(--text-subtle)", fontSize:14, padding:0, lineHeight:1 },
+  sortBtn: { background:"none", border:"1px solid var(--border-strong)", borderRadius:6, cursor:"pointer", color:"var(--text-faint)", fontSize:12, padding:"2px 7px", fontFamily:"inherit", lineHeight:1.4 },
+  catTab:  { padding:"4px 10px", border:"1px solid var(--border-strong)", borderRadius:16, fontSize:12, cursor:"pointer", background:"var(--surface-alt)", fontFamily:"inherit", color:"var(--text-muted)" },
+  catTabOn:{ background:"var(--ink-bg)", color:"#fff", borderColor:"var(--ink-bg)" },
 };
