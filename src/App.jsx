@@ -715,6 +715,54 @@ function WeekDetailModal({ monStr, sunStr, records, catColors, onClose }) {
   );
 }
 
+// ── PendingOpsModal ──────────────────────────────────────────────────────────
+function PendingOpsModal({ ops, records, catColors, onEdit, onRetry, onClose }) {
+  const items = ops.map(op => {
+    const { action } = op.body;
+    if (action === "addRecord") {
+      const rec = records.find(r => r.id === op.body.record.id) || op.body.record;
+      return { id: op.id, kind: "record", rec };
+    }
+    if (action === "deleteRecord") {
+      return { id: op.id, kind: "delete", recordId: op.body.id };
+    }
+    return { id: op.id, kind: "settings", key: Object.keys(op.body.settings || {})[0] || "設定" };
+  });
+  return (
+    <div style={M.overlay} onClick={onClose}>
+      <div style={{...M.modal,maxWidth:420}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <h3 style={{...M.mTitle,marginBottom:0}}>未保存の変更（{items.length}件）</h3>
+          <button style={{background:"none",border:"none",color:"var(--text-subtle)",cursor:"pointer",fontSize:20,padding:"0 2px"}} onClick={onClose}>×</button>
+        </div>
+        <p style={{fontSize:12,color:"var(--text-subtle)",marginBottom:12}}>サーバーへの保存に失敗している変更です。オンラインになると自動で再送信されます。項目をタップすると内容を確認・編集できます。</p>
+        {items.map(it=>(
+          <div key={it.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:13}}>
+            {it.kind==="record" && (
+              <Fragment>
+                <span style={{width:8,height:8,borderRadius:"50%",background:catColors[it.rec.category]||"var(--text-subtle)",flexShrink:0,display:"inline-block"}} />
+                <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>onEdit(it.rec)}>
+                  <div style={{fontWeight:600,color:"var(--text-primary)"}}>{it.rec.payee||"—"}</div>
+                  <div style={{fontSize:11,color:"var(--text-faint)"}}>{normDate(it.rec.date)} ・ {it.rec.category||"未分類"}</div>
+                </div>
+                <span style={{fontWeight:700,flexShrink:0}}>{fmtYen(it.rec.amount)}</span>
+                <button style={{background:"none",border:"1px solid var(--border)",borderRadius:6,color:"var(--text-subtle)",cursor:"pointer",fontSize:11,padding:"2px 7px",flexShrink:0}} onClick={()=>onEdit(it.rec)}>編集</button>
+              </Fragment>
+            )}
+            {it.kind==="delete" && (
+              <div style={{flex:1,color:"var(--text-faint)"}}>削除待ち（ID: {it.recordId}）</div>
+            )}
+            {it.kind==="settings" && (
+              <div style={{flex:1,color:"var(--text-faint)"}}>設定の保存待ち（{it.key}）</div>
+            )}
+          </div>
+        ))}
+        <button style={{...S.primaryBtn,marginTop:14}} onClick={onRetry}>今すぐ再送信</button>
+      </div>
+    </div>
+  );
+}
+
 // ── MonthCategoryModal ───────────────────────────────────────────────────────
 function MonthCategoryModal({ year, month, records, catColors, onClose }) {
   const total = records.reduce((s,r)=>s+Number(r.amount),0);
@@ -834,6 +882,7 @@ export default function App() {
   const [showTodayDetail, setShowTodayDetail] = useState(false);
   const [weekDetailRange, setWeekDetailRange] = useState(null);
   const [showMonthCatDetail, setShowMonthCatDetail] = useState(false);
+  const [showPending, setShowPending] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState(new Set());
   const [toast, setToast]       = useState("");
   const writing = useRef(0);
@@ -1114,7 +1163,7 @@ export default function App() {
           <span style={S.logo}>家計簿</span>
           {syncing && <span style={S.sync}>同期中...</span>}
           {pendingCount>0 && (
-            <span style={S.syncError} onClick={flushPending} title="タップして再送信">
+            <span style={S.syncError} onClick={()=>setShowPending(true)} title="タップして確認・編集">
               ⚠ 未保存{pendingCount}件
             </span>
           )}
@@ -1742,6 +1791,16 @@ export default function App() {
       {showTodayDetail && <TodayDetailModal date={today} records={records.filter(r=>normDate(r.date)===today)} catColors={catColors} onClose={()=>setShowTodayDetail(false)} />}
       {weekDetailRange && <WeekDetailModal monStr={weekDetailRange.monStr} sunStr={weekDetailRange.sunStr} records={records.filter(r=>{const d=normDate(r.date);return d>=weekDetailRange.monStr&&d<=weekDetailRange.sunStr;})} catColors={catColors} onClose={()=>setWeekDetailRange(null)} />}
       {showMonthCatDetail && <MonthCategoryModal year={vYear} month={vMonth} records={mRecs} catColors={catColors} onClose={()=>setShowMonthCatDetail(false)} />}
+      {showPending && (
+        <PendingOpsModal
+          ops={pendingOps.current}
+          records={records}
+          catColors={catColors}
+          onEdit={rec=>{ setShowPending(false); setEditRec({...rec}); }}
+          onRetry={()=>{ flushPending(); }}
+          onClose={()=>setShowPending(false)}
+        />
+      )}
       {showBulkRecat && <BulkRecategorizeModal records={records} cats={cats} catColors={catColors} onApply={bulkAssignCategory} onClose={()=>setShowBulkRecat(false)} />}
       {expCat && (
         <CategoryBreakdownModal
